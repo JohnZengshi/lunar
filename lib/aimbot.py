@@ -13,6 +13,8 @@ import win32api
 
 from termcolor import colored
 
+from lib.memory import SharedMemoryWriter
+
 
 class Aimbot:
     extra = ctypes.c_ulong(0)
@@ -43,6 +45,10 @@ class Aimbot:
         self.collect_data = collect_data
         self.mouse_delay = mouse_delay
         self.debug = debug
+
+        self.shared_memory_writer = SharedMemoryWriter(
+            "shared_memory.bin", 8)  # 假设每个值占用 4 个字节
+        self.shared_memory_writer.initialize()
 
         print("\n[INFO] PRESS 'HOME' TO TOGGLE AIMBOT\n[INFO] PRESS 'END' TO QUIT")
 
@@ -150,7 +156,9 @@ class Aimbot:
                                     cv2.FONT_HERSHEY_DUPLEX, 0.5, (115, 113, 244), 2)
 
                     if Aimbot.is_aimbot_enabled():
-                        print(absolute_head_X, absolute_head_Y)
+                        # print(absolute_head_X, absolute_head_Y)
+                        self.shared_memory_writer.write_values(
+                            absolute_head_X, absolute_head_Y)
                         # TODO 共享数据
 
             if self.collect_data and time.perf_counter() - collect_pause > 1 and Aimbot.is_targeted() and Aimbot.is_aimbot_enabled() and not player_in_frame:  # screenshots can only be taken every 1 second
