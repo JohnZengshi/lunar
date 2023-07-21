@@ -1,4 +1,7 @@
 lib/config
 lib/data
 lib/__pycache__
+lib/Python38
 training
+dist
+env
