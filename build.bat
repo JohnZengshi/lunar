@@ -13,11 +13,13 @@ if not exist "%destination_folder%" (
 )
 
 @REM REM 复制文件夹和文件
-xcopy /s /y "%source_folder%env" "%destination_folder%env\"
+@REM xcopy /s /y "%source_folder%env" "%destination_folder%env\"
 xcopy /s /y "%source_folder%lib" "%destination_folder%lib\"
 xcopy /s /y "%source_folder%使用说明" "%destination_folder%使用说明\"
+copy /y "%source_folder%setup.bat" "%destination_folder%"
 copy /y "%source_folder%install.bat" "%destination_folder%"
 copy /y "%source_folder%start.bat" "%destination_folder%"
+copy /y "%source_folder%requirements.txt" "%destination_folder%"
 
 REM 执行 pyarmor gen 命令
 pyarmor gen --output %destination_folder%lib\ %source_folder%lib\aimbot.py
