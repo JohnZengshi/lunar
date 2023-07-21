@@ -1,3 +1,9 @@
+'''
+LastEditors: John
+Date: 2023-07-18 20:21:39
+LastEditTime: 2023-07-19 16:03:09
+Author: John
+'''
 import datetime
 import os
 import json
@@ -56,11 +62,12 @@ class KeyValidator:
             f.write(key)
 
     def check_expiration(self, expiration):
-        current_time = datetime.datetime.now()
         while True:
+            current_time = datetime.datetime.now()
             if expiration <= current_time:
                 print("密钥已过期！")
                 os._exit(1)
+            # print(expiration, current_time)
             time.sleep(60)
 
     def start_expiration_thread(self, expiration):

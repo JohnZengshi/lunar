@@ -12,6 +12,7 @@ import time
 import torch
 import uuid
 import win32api
+import tkinter as tk
 
 from termcolor import colored
 from lib.inter import Inter
@@ -22,15 +23,20 @@ from lib.interception_py.stroke import mouse_stroke
 # from lib.memory import SharedMemoryWriter
 
 DEFAULT_AIM_WIDTH = 64
-DEFAULT_AIM_HEIGHT = 64
+DEFAULT_AIM_HEIGHT = 128
+
+config_file = "lib/config/config.json"
 
 
 class Aimbot:
     extra = ctypes.c_ulong(0)
     screen = mss.mss()
     pixel_increment = 1  # controls how many pixels the mouse moves for each relative movement
-    with open("lib/config/config.json") as f:
+
+    with open(config_file, 'r') as f:
         sens_config = json.load(f)
+    long_distance_pixel_increment = sens_config['long_distance_pixel_increment']
+    close_distance_pixel_increment = sens_config['close_distance_pixel_increment']
     aimbot_status = colored("ENABLED", 'green')
     half_screen_width = ctypes.windll.user32.GetSystemMetrics(
         0)/2  # this should always be 960
@@ -93,11 +99,18 @@ class Aimbot:
         else:
             return  # TODO
 
+        if self.aim_width != DEFAULT_AIM_WIDTH:
+            Aimbot.pixel_increment = Aimbot.close_distance_pixel_increment
+        else:
+            Aimbot.pixel_increment = Aimbot.long_distance_pixel_increment
+
         for rel_x, rel_y in Aimbot.interpolate_coordinates_from_center((x, y), scale):
             self.inter.inter.set_filter(
                 interception.is_mouse, interception_filter_mouse_state.INTERCEPTION_FILTER_MOUSE_MOVE.value)
+
+            # print(rel_x, rel_y)
             stroke = mouse_stroke(0, 0, 0, rel_x, rel_y, 0)
-            self.inter.inter.send(11, stroke)
+            self.inter.inter.send(Inter.mdevice, stroke)
 
             sleep_time = random.uniform(0.4, 1.4)
             # print("sleepTime:", sleep_time)
@@ -111,24 +124,28 @@ class Aimbot:
         diff_y = (
             absolute_coordinates[1] - Aimbot.half_screen_height) * scale/Aimbot.pixel_increment
 
-        if abs(diff_x) <= 1 and abs(diff_y) <= 1:
+        # 防止抖动
+        length = int(math.dist((0, 0), (diff_x, diff_y)))
+        if length <= 2:
             return
 
-        length = int(math.dist((0, 0), (diff_x, diff_y)))
-        if length == 0:
-            return
-        unit_x = (diff_x/length) * Aimbot.pixel_increment
-        unit_y = (diff_y/length) * Aimbot.pixel_increment
+        # print(f"diff_x:{diff_x},diff_y:{diff_y},length:{length}")
         x = y = sum_x = sum_y = 0
+        pixel_increment = Aimbot.pixel_increment
+
         for k in range(0, length):
+            unit_x = round(diff_x/length) * pixel_increment
+            unit_y = round(diff_y/length) * pixel_increment
+
             sum_x += x
             sum_y += y
+
             x, y = round(unit_x * k - sum_x), round(unit_y * k - sum_y)
             yield x, y
 
     def is_point_inside_rectangle(self, x0, y0):
-        screen_width = 1920
-        screen_height = 1080
+        screen_width = Aimbot.half_screen_width * 2
+        screen_height = Aimbot.half_screen_height * 2
 
         rect_left = (screen_width - self.aim_width) // 2
         rect_right = rect_left + self.aim_width
@@ -139,6 +156,17 @@ class Aimbot:
             return True
         else:
             return False
+
+    def accelerate_decelerate(start, end, steps, num_cycles=1):
+        """在for循环中产生加速减速效果的值序列"""
+        values = []
+        num_steps = steps * num_cycles
+        for step in range(num_steps):
+            t = step / float(num_steps - 1)  # 控制时间从0到1的变化
+            acceleration = math.sin(t * math.pi)  # 使用sin函数实现加速减速效果
+            x = start + acceleration * (end - start)
+            values.append(x)
+        return round(values)
 
     def start(self):
         print("[INFO] Beginning screen capture")
@@ -162,9 +190,59 @@ class Aimbot:
                 if target_ratio <= 2.2:
                     target_ratio = 2.7
                 time.sleep(2)
-        thread = threading.Thread(target=update_target_ratio)
-        thread.daemon = True
-        thread.start()
+        thread_1 = threading.Thread(target=update_target_ratio)
+        thread_1.daemon = True
+        thread_1.start()
+
+        def update_pixel_increment():
+            def update_long_distance_pixel_increment(value):
+                slider_1_label_text.config(
+                    text=f"远距离拉枪速度：{value}")
+                Aimbot.long_distance_pixel_increment = float(value)
+
+                Aimbot.sens_config['long_distance_pixel_increment'] = value
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.sens_config, file, indent=4)
+
+            def update_close_distance_pixel_increment(value):
+                slider_2_label_text.config(
+                    text=f"近距离拉枪速度：{value}")
+                Aimbot.close_distance_pixel_increment = float(value)
+                Aimbot.sens_config['close_distance_pixel_increment'] = value
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.sens_config, file, indent=4)
+
+            # 创建主窗口
+            root = tk.Tk()
+            root.title("参数设置")
+
+            # 创建容器1
+            frame1 = tk.Frame(root)
+            frame1.pack(pady=10)
+
+            # 创建滑块和标签
+            slider_1_label_text = tk.Label(frame1, text="远距离拉枪速度：")
+            slider_1_label_text.pack(side=tk.LEFT)  # 将文本标签放在滑块左边
+            slider_1 = tk.Scale(frame1, from_=0.1, to=1, orient=tk.HORIZONTAL,
+                                length=300, resolution=0.1, command=update_long_distance_pixel_increment)
+            slider_1.set(Aimbot.long_distance_pixel_increment)
+            slider_1.pack(pady=10)
+
+            frame2 = tk.Frame(root)
+            frame2.pack(pady=10)
+
+            slider_2_label_text = tk.Label(frame2, text="近距离拉枪速度：")
+            slider_2_label_text.pack(side=tk.LEFT)  # 将文本标签放在滑块左边
+            slider_2 = tk.Scale(frame2, from_=0.1, to=2, orient=tk.HORIZONTAL,
+                                length=300, resolution=0.1, command=update_close_distance_pixel_increment)
+            slider_2.set(Aimbot.close_distance_pixel_increment)
+            slider_2.pack(pady=10)
+
+            # 运行主循环
+            root.mainloop()
+        thread_2 = threading.Thread(target=update_pixel_increment)
+        thread_2.daemon = True
+        thread_2.start()
 
         while True:
             start_time = time.perf_counter()
@@ -225,8 +303,8 @@ class Aimbot:
                     det_box_height = closest_detection["x2y2"][1] - \
                         closest_detection["x1y1"][1]
                     if det_box_width > DEFAULT_AIM_WIDTH:
-                        self.aim_width = det_box_width
-                        self.aim_height = det_box_height / 2
+                        self.aim_width = det_box_width * 3
+                        self.aim_height = det_box_height
                     else:
                         self.aim_width = DEFAULT_AIM_WIDTH
                         self.aim_height = DEFAULT_AIM_HEIGHT
@@ -276,7 +354,7 @@ class Aimbot:
             #     break
 
     def clean_up():
-        print("\n[INFO] F2 WAS PRESSED. QUITTING...")
+        print("\n[INFO] END WAS PRESSED. QUITTING...")
         os._exit(0)
 
 

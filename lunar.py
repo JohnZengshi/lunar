@@ -1,12 +1,11 @@
 '''
 LastEditors: John
 Date: 2023-07-16 13:26:01
-LastEditTime: 2023-07-18 20:51:38
+LastEditTime: 2023-07-20 22:27:13
 Author: John
 '''
 import os
 import sys
-import threading
 
 from pynput import keyboard
 from termcolor import colored
@@ -26,8 +25,8 @@ def on_release(key):
 
 
 def main():
-    validator = KeyValidator()
-    validator.check_key_file()
+    # validator = KeyValidator()
+    # validator.check_key_file()
 
     global lunar
     lunar = Aimbot(collect_data="collect_data" in sys.argv)
