@@ -1,7 +1,7 @@
 '''
 LastEditors: John
 Date: 2023-07-16 13:26:01
-LastEditTime: 2023-07-21 21:29:29
+LastEditTime: 2023-07-22 09:56:41
 Author: John
 '''
 import os
@@ -25,8 +25,8 @@ def on_release(key):
 
 
 def main():
-    validator = KeyValidator()
-    validator.check_key_file()
+    # validator = KeyValidator()
+    # validator.check_key_file()
 
     global lunar
     lunar = Aimbot(collect_data="collect_data" in sys.argv)

@@ -13,6 +13,7 @@ import torch
 import uuid
 import win32api
 import tkinter as tk
+from tkinter import ttk
 
 from termcolor import colored
 from lib.inter import Inter
@@ -34,14 +35,15 @@ class Aimbot:
     pixel_increment = 1  # controls how many pixels the mouse moves for each relative movement
 
     with open(config_file, 'r') as f:
-        sens_config = json.load(f)
-    long_distance_pixel_increment = sens_config['long_distance_pixel_increment']
-    close_distance_pixel_increment = sens_config['close_distance_pixel_increment']
+        setting_config = json.load(f)
+    long_distance_pixel_increment = setting_config['long_distance_pixel_increment']
+    close_distance_pixel_increment = setting_config['close_distance_pixel_increment']
     aimbot_status = colored("ENABLED", 'green')
     half_screen_width = ctypes.windll.user32.GetSystemMetrics(
         0)/2  # this should always be 960
     half_screen_height = ctypes.windll.user32.GetSystemMetrics(
         1)/2  # this should always be 540
+    aimkey = setting_config["aimkey"]
 
     def __init__(self, box_constant=416, collect_data=False, mouse_delay=0.0001, debug=False):
         # controls the initial centered box width and height of the "Lunar Vision" window
@@ -86,7 +88,7 @@ class Aimbot:
         return True if Aimbot.aimbot_status == colored("ENABLED", 'green') else False
 
     def is_targeted():
-        return True if win32api.GetKeyState(0x06) in (-127, -128) else False
+        return True if win32api.GetKeyState(int(Aimbot.aimkey, 16)) in (-127, -128) else False
 
     def is_target_locked(x, y):
         # plus/minus 5 pixel threshold
@@ -200,17 +202,17 @@ class Aimbot:
                     text=f"远距离拉枪速度：{value}")
                 Aimbot.long_distance_pixel_increment = float(value)
 
-                Aimbot.sens_config['long_distance_pixel_increment'] = value
+                Aimbot.setting_config['long_distance_pixel_increment'] = value
                 with open(config_file, 'w') as file:
-                    json.dump(Aimbot.sens_config, file, indent=4)
+                    json.dump(Aimbot.setting_config, file, indent=4)
 
             def update_close_distance_pixel_increment(value):
                 slider_2_label_text.config(
                     text=f"近距离拉枪速度：{value}")
                 Aimbot.close_distance_pixel_increment = float(value)
-                Aimbot.sens_config['close_distance_pixel_increment'] = value
+                Aimbot.setting_config['close_distance_pixel_increment'] = value
                 with open(config_file, 'w') as file:
-                    json.dump(Aimbot.sens_config, file, indent=4)
+                    json.dump(Aimbot.setting_config, file, indent=4)
 
             # 创建主窗口
             root = tk.Tk()
@@ -238,8 +240,38 @@ class Aimbot:
             slider_2.set(Aimbot.close_distance_pixel_increment)
             slider_2.pack(pady=10)
 
+            frame3 = tk.Frame(root)
+            frame3.pack(pady=10)
+
+            def aim_key_on_select(option):
+                selected_value = option_value_dict[option]
+                # print(f"选择了：{option}，绑定值：{selected_value}")
+                Aimbot.aimkey = selected_value
+                Aimbot.setting_config["aimkey"] = selected_value
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
+
+            # 创建一个StringVar变量，用于设置默认选择
+            default_option = tk.StringVar(frame3, "鼠标上侧键")
+
+            # 创建选择框和标签
+            label_text = tk.Label(frame3, text="选择自瞄按键：")
+            label_text.pack(side=tk.LEFT)
+
+            options = ["Ctrl", "Shift", "鼠标上侧键", "鼠标下侧键"]
+            values = ["0x11", "0x10", "0x06", "0x05"]
+            option_value_dict = dict(zip(options, values))
+
+            option_menu = tk.OptionMenu(
+                frame3, default_option, *options, command=aim_key_on_select)
+            option_menu.pack()
+
+            # 设置默认选择为鼠标上侧键
+            default_option.set("鼠标上侧键")
+
             # 运行主循环
             root.mainloop()
+
         thread_2 = threading.Thread(target=update_pixel_increment)
         thread_2.daemon = True
         thread_2.start()
