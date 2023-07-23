@@ -1,6 +1,7 @@
 import ctypes
 import random
 import threading
+from typing import Any, Callable, List
 import cv2
 import json
 import math
@@ -26,6 +27,9 @@ from lib.interception_py.stroke import mouse_stroke
 DEFAULT_AIM_WIDTH = 64
 DEFAULT_AIM_HEIGHT = 128
 
+DEFAULT_TARGET_HEAD_RATIO = 2.7
+DEFAULT_TARGET_BODY_RATIO = 3.5
+
 config_file = "lib/config/config.json"
 
 
@@ -44,6 +48,7 @@ class Aimbot:
     half_screen_height = ctypes.windll.user32.GetSystemMetrics(
         1)/2  # this should always be 540
     aimkey = setting_config["aimkey"]
+    aimtarget = setting_config["aimtarget"]
 
     def __init__(self, box_constant=416, collect_data=False, mouse_delay=0.0001, debug=False):
         # controls the initial centered box width and height of the "Lunar Vision" window
@@ -183,96 +188,73 @@ class Aimbot:
             collect_pause = 0
 
         # 定时修改比值
-        target_ratio = 2.7
+        target_ratio = DEFAULT_TARGET_BODY_RATIO
 
         def update_target_ratio():
             nonlocal target_ratio
             while True:
                 target_ratio -= 0.1
-                if target_ratio <= 2.2:
-                    target_ratio = 2.7
+                if Aimbot.aimtarget == 0:
+                    if target_ratio <= 2.2:
+                        target_ratio = DEFAULT_TARGET_HEAD_RATIO
+                elif Aimbot.aimtarget == 1:
+                    if target_ratio <= 2.2:
+                        target_ratio = DEFAULT_TARGET_BODY_RATIO
+                elif Aimbot.aimtarget == 2:
+                    if target_ratio <= 3.0:
+                        target_ratio = DEFAULT_TARGET_BODY_RATIO
                 time.sleep(2)
+
         thread_1 = threading.Thread(target=update_target_ratio)
         thread_1.daemon = True
         thread_1.start()
 
-        def update_pixel_increment():
-            def update_long_distance_pixel_increment(value):
-                slider_1_label_text.config(
-                    text=f"远距离拉枪速度：{value}")
-                Aimbot.long_distance_pixel_increment = float(value)
-
-                Aimbot.setting_config['long_distance_pixel_increment'] = value
-                with open(config_file, 'w') as file:
-                    json.dump(Aimbot.setting_config, file, indent=4)
-
-            def update_close_distance_pixel_increment(value):
-                slider_2_label_text.config(
-                    text=f"近距离拉枪速度：{value}")
-                Aimbot.close_distance_pixel_increment = float(value)
-                Aimbot.setting_config['close_distance_pixel_increment'] = value
-                with open(config_file, 'w') as file:
-                    json.dump(Aimbot.setting_config, file, indent=4)
+        def update_config_ui():
 
             # 创建主窗口
             root = tk.Tk()
             root.title("参数设置")
 
-            # 创建容器1
-            frame1 = tk.Frame(root)
-            frame1.pack(pady=10)
+            def update_long_distance_pixel_increment(value):
+                Aimbot.long_distance_pixel_increment = float(value)
+                Aimbot.setting_config['long_distance_pixel_increment'] = value
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
 
-            # 创建滑块和标签
-            slider_1_label_text = tk.Label(frame1, text="远距离拉枪速度：")
-            slider_1_label_text.pack(side=tk.LEFT)  # 将文本标签放在滑块左边
-            slider_1 = tk.Scale(frame1, from_=0.1, to=1, orient=tk.HORIZONTAL,
-                                length=300, resolution=0.1, command=update_long_distance_pixel_increment)
-            slider_1.set(Aimbot.long_distance_pixel_increment)
-            slider_1.pack(pady=10)
+            Aimbot.gen_slider_ui(root=root, default=Aimbot.long_distance_pixel_increment,
+                                 label="远距离拉枪速度：", from_=0.1, to=1, callback=update_long_distance_pixel_increment)
 
-            frame2 = tk.Frame(root)
-            frame2.pack(pady=10)
+            def update_close_distance_pixel_increment(value):
+                Aimbot.close_distance_pixel_increment = float(value)
+                Aimbot.setting_config['close_distance_pixel_increment'] = value
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
 
-            slider_2_label_text = tk.Label(frame2, text="近距离拉枪速度：")
-            slider_2_label_text.pack(side=tk.LEFT)  # 将文本标签放在滑块左边
-            slider_2 = tk.Scale(frame2, from_=0.1, to=2, orient=tk.HORIZONTAL,
-                                length=300, resolution=0.1, command=update_close_distance_pixel_increment)
-            slider_2.set(Aimbot.close_distance_pixel_increment)
-            slider_2.pack(pady=10)
+            Aimbot.gen_slider_ui(root=root, default=Aimbot.close_distance_pixel_increment,
+                                 label="近距离拉枪速度：", from_=0.1, to=2, callback=update_close_distance_pixel_increment)
 
-            frame3 = tk.Frame(root)
-            frame3.pack(pady=10)
-
-            def aim_key_on_select(option):
-                selected_value = option_value_dict[option]
-                # print(f"选择了：{option}，绑定值：{selected_value}")
+            def aim_key_on_select(selected_value):
                 Aimbot.aimkey = selected_value
                 Aimbot.setting_config["aimkey"] = selected_value
                 with open(config_file, 'w') as file:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
-            # 创建一个StringVar变量，用于设置默认选择
-            default_option = tk.StringVar(frame3, "鼠标上侧键")
+            Aimbot.gen_select_ui(root=root, default=Aimbot.aimkey, label="选择自瞄按键：", options=[
+                                 "Ctrl", "Shift", "鼠标上侧键", "鼠标下侧键"], values=["0x11", "0x10", "0x06", "0x05"], callback=aim_key_on_select)
 
-            # 创建选择框和标签
-            label_text = tk.Label(frame3, text="选择自瞄按键：")
-            label_text.pack(side=tk.LEFT)
+            def aim_target_on_select(selected_value):
+                Aimbot.aimtarget = selected_value
+                Aimbot.setting_config["aimtarget"] = selected_value
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
 
-            options = ["Ctrl", "Shift", "鼠标上侧键", "鼠标下侧键"]
-            values = ["0x11", "0x10", "0x06", "0x05"]
-            option_value_dict = dict(zip(options, values))
-
-            option_menu = tk.OptionMenu(
-                frame3, default_option, *options, command=aim_key_on_select)
-            option_menu.pack()
-
-            # 设置默认选择为鼠标上侧键
-            default_option.set("鼠标上侧键")
+            Aimbot.gen_select_ui(root=root, default=Aimbot.aimtarget, label="选择自瞄位置：", options=[
+                                 "头部（危险）", "随机头部身体", "身体"], values=[0, 1, 2], callback=aim_target_on_select)
 
             # 运行主循环
             root.mainloop()
 
-        thread_2 = threading.Thread(target=update_pixel_increment)
+        thread_2 = threading.Thread(target=update_config_ui)
         thread_2.daemon = True
         thread_2.start()
 
@@ -384,6 +366,53 @@ class Aimbot:
             # cv2.imshow("Lunar Vision", frame)
             # if cv2.waitKey(1) & 0xFF == ord('0'):
             #     break
+
+    def gen_select_ui(root: tk.Tk, default: Any, label: str, options: List[str], values: List[Any], callback: Callable[[Any], None]):
+        frame = tk.Frame(root)
+        frame.pack(anchor='w')
+
+        def on_select(option):
+            selected_value = option_value_dict[option]
+            callback(selected_value)
+
+        # 创建一个StringVar变量，用于设置默认选择
+        default_option = tk.StringVar(frame, default)
+
+        # 创建选择框和标签
+        label_text = tk.Label(frame, text=label)
+        label_text.pack(side=tk.LEFT)
+
+        options = options
+        values = values
+        option_value_dict = dict(zip(options, values))
+
+        option_menu = tk.OptionMenu(
+            frame, default_option, *options, command=on_select)
+        option_menu.pack()
+
+        # 设置默认选择为鼠标上侧键
+        default_options = [option for option,
+                           val in option_value_dict.items() if val == default]
+
+        default_option.set(default_options)
+
+    def gen_slider_ui(root: tk.Tk, default: str, label: str, from_: float, to: float, callback: Callable[[Any], None]):
+        # 创建容器1
+        frame = tk.Frame(root)
+        frame.pack(anchor='w')
+
+        def update(value):
+            label_text.config(
+                text=f"{label}{value}")
+            callback(value)
+
+        # 创建滑块和标签
+        label_text = tk.Label(frame, text=label)
+        label_text.pack(side=tk.LEFT)  # 将文本标签放在滑块左边
+        slider = tk.Scale(frame, from_=from_, to=to, orient=tk.HORIZONTAL,
+                          length=300, resolution=0.1, command=update)
+        slider.set(default)
+        slider.pack(pady=10)
 
     def clean_up():
         print("\n[INFO] END WAS PRESSED. QUITTING...")
