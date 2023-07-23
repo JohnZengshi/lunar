@@ -188,21 +188,32 @@ class Aimbot:
             collect_pause = 0
 
         # 定时修改比值
-        target_ratio = DEFAULT_TARGET_BODY_RATIO
+        target_ratio_y = DEFAULT_TARGET_BODY_RATIO
+        DEFAULT_TARGET_X = 2
+        target_ratio_x = DEFAULT_TARGET_X
 
         def update_target_ratio():
-            nonlocal target_ratio
+            nonlocal target_ratio_y
+            nonlocal target_ratio_x
             while True:
-                target_ratio -= 0.1
+                target_ratio_y -= 0.1
                 if Aimbot.aimtarget == 0:
-                    if target_ratio <= 2.2:
-                        target_ratio = DEFAULT_TARGET_HEAD_RATIO
+                    if target_ratio_y <= 2.2:
+                        target_ratio_y = DEFAULT_TARGET_HEAD_RATIO
                 elif Aimbot.aimtarget == 1:
-                    if target_ratio <= 2.2:
-                        target_ratio = DEFAULT_TARGET_BODY_RATIO
+                    if target_ratio_y <= 2.2:
+                        target_ratio_y = DEFAULT_TARGET_BODY_RATIO
                 elif Aimbot.aimtarget == 2:
-                    if target_ratio <= 3.0:
-                        target_ratio = DEFAULT_TARGET_BODY_RATIO
+                    if target_ratio_y <= 3.0:
+                        target_ratio_y = DEFAULT_TARGET_BODY_RATIO
+
+                if target_ratio_y >= 3.0:
+                    target_ratio_x = DEFAULT_TARGET_X + \
+                        round(random.uniform(-0.10, 0.10), 2)
+                else:
+                    target_ratio_x = DEFAULT_TARGET_X + \
+                        round(random.uniform(-0.05, 0.05), 2)
+
                 time.sleep(2)
 
         thread_1 = threading.Thread(target=update_target_ratio)
@@ -276,7 +287,7 @@ class Aimbot:
                     # offset to roughly approximate the head using a ratio of the height
 
                     relative_head_X, relative_head_Y = int(
-                        (x1 + x2)/2), int((y1 + y2)/2 - height/target_ratio)
+                        (x1 + x2)/target_ratio_x), int((y1 + y2)/2 - height/target_ratio_y)
                     # helps ensure that your own player is not regarded as a valid detection
                     own_player = x1 < 15 or (
                         x1 < self.box_constant/5 and y2 > self.box_constant/1.2)
