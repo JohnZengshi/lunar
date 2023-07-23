@@ -25,8 +25,6 @@ REM 执行 pyarmor gen 命令
 pyarmor gen --output %destination_folder%lib\ %source_folder%lib\aimbot.py
 pyarmor gen --output %destination_folder%lib\ %source_folder%lib\inter.py
 pyarmor gen --output %destination_folder%lib\ %source_folder%lib\key_validator.py
-
-@REM REM 执行 pyarmor gen lunar.py 命令
-pyarmor gen "%source_folder%lunar.py"
+pyarmor gen %source_folder%lunar.py
 
 endlocal

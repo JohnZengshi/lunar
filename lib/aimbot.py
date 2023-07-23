@@ -49,6 +49,7 @@ class Aimbot:
         1)/2  # this should always be 540
     aimkey = setting_config["aimkey"]
     aimtarget = setting_config["aimtarget"]
+    det_box_width = 0
 
     def __init__(self, box_constant=416, collect_data=False, mouse_delay=0.0001, debug=False):
         # controls the initial centered box width and height of the "Lunar Vision" window
@@ -187,7 +188,7 @@ class Aimbot:
         if self.collect_data:
             collect_pause = 0
 
-        # 定时修改比值
+        # 定时修改瞄准比值（伪随机决定瞄准位置）
         target_ratio_y = DEFAULT_TARGET_BODY_RATIO
         DEFAULT_TARGET_X = 2
         target_ratio_x = DEFAULT_TARGET_X
@@ -210,9 +211,13 @@ class Aimbot:
                 if target_ratio_y >= 3.0:
                     target_ratio_x = DEFAULT_TARGET_X + \
                         round(random.uniform(-0.10, 0.10), 2)
-                else:
+                elif self.det_box_width >= 50:
                     target_ratio_x = DEFAULT_TARGET_X + \
                         round(random.uniform(-0.05, 0.05), 2)
+                else:
+                    target_ratio_x = DEFAULT_TARGET_X
+
+                # print(self.det_box_width)
 
                 time.sleep(2)
 
@@ -323,12 +328,12 @@ class Aimbot:
                     cv2.rectangle(
                         frame, closest_detection["x1y1"], closest_detection["x2y2"], (115, 244, 113), 2)
 
-                    det_box_width = closest_detection["x2y2"][0] - \
+                    self.det_box_width = closest_detection["x2y2"][0] - \
                         closest_detection["x1y1"][0]
                     det_box_height = closest_detection["x2y2"][1] - \
                         closest_detection["x1y1"][1]
-                    if det_box_width > DEFAULT_AIM_WIDTH:
-                        self.aim_width = det_box_width * 3
+                    if self.det_box_width > DEFAULT_AIM_WIDTH:
+                        self.aim_width = self.det_box_width * 3
                         self.aim_height = det_box_height
                     else:
                         self.aim_width = DEFAULT_AIM_WIDTH
