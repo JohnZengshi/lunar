@@ -58,7 +58,7 @@ class Aimbot:
 
         print("[INFO] Loading the neural network model")
         self.model = torch.hub.load(
-            'lib/yolov5-master', 'custom', path='lib/best.pt', source='local', force_reload=True)
+            'lib/yolov5-master', 'custom', path='lib/bestv2.pt', source='local', force_reload=True)
         if torch.cuda.is_available():
             print(colored("CUDA ACCELERATION [ENABLED]", "green"))
         else:

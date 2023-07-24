@@ -1,7 +1,7 @@
 '''
 LastEditors: John
 Date: 2023-07-22 13:59:14
-LastEditTime: 2023-07-22 16:06:42
+LastEditTime: 2023-07-24 23:16:15
 Author: John
 '''
 import cv2 as cv
@@ -44,11 +44,17 @@ def take_ss():
         wincap.save_ss()
 
 
+# def on_ctrl_press(event):
+#     if event.name == 'ctrl':
+#         take_ss()
+
+
 # Hooks
 keyboard.add_hotkey(STOP, on_stop)
 keyboard.add_hotkey(GATHER, toggleGather)
 # mouse.on_click(take_ss) # this would fire after button is raised up again - it is abit too late.
 mouse.on_button(take_ss, buttons=[mouse.X2], types=[mouse.DOWN])
+# keyboard.on_press(on_ctrl_press)
 
 print('STOP = {}'.format(STOP))
 print('Toggle Gather = {}'.format(GATHER))
