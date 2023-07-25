@@ -1,21 +1,40 @@
-import tkinter as tk
+import math
+
+diff_x = 50
+diff_y = -50
+length = int(math.dist((0, 0), (diff_x, diff_y)))
 
 
-def update_label(value):
-    label.config(text=f"当前值：{value}")
+def accelerate_decelerate(k, total_steps):
+    max_speed = 9
+    acceleration_phase = total_steps // 2
+    deceleration_phase = total_steps - acceleration_phase
+
+    if k < acceleration_phase:
+        speed = (k + 1) * max_speed // acceleration_phase
+    else:
+        deceleration_steps = k - acceleration_phase
+        speed = (deceleration_phase - deceleration_steps) * \
+            max_speed // deceleration_phase
+
+    return speed
 
 
-# 创建主窗口
-root = tk.Tk()
-root.title("滑块示例")
+for k in range(0, length):
+    x = accelerate_decelerate(k, length)
+    y = accelerate_decelerate(k, length)
 
-# 创建滑块和标签
-slider = tk.Scale(root, from_=0, to=2, orient=tk.HORIZONTAL,
-                  length=300, resolution=0.1, command=update_label)
-slider.pack(pady=20)
+    if diff_x > 0:
+        x = min(x, diff_x)
+    else:
+        x = max(-x, diff_x)
 
-label = tk.Label(root, text="当前值：0")
-label.pack()
+    if diff_y > 0:
+        y = min(y, diff_y)
+    else:
+        y = max(-y, diff_y)
 
-# 运行主循环
-root.mainloop()
+    diff_x -= x
+    diff_y -= y
+
+    print(x, y)

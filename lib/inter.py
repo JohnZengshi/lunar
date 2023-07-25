@@ -1,7 +1,7 @@
 '''
 LastEditors: John
 Date: 2023-07-18 10:06:51
-LastEditTime: 2023-07-21 15:28:43
+LastEditTime: 2023-07-25 16:29:22
 Author: John
 '''
 
@@ -16,6 +16,8 @@ class Inter:
     SCANCODE_ESC = 0x01
     init = False
     mdevice = 10
+
+    record = False
 
     def __init__(self) -> None:
         self.inter = interception()
@@ -36,8 +38,8 @@ class Inter:
             stroke: mouse_stroke = self.inter.receive(device)
             self.inter.send(device, stroke)
             Inter.init = True
-            # if interception.is_mouse(device):
-            #     print(stroke.x, stroke.y)
+            if interception.is_mouse(device) and Inter.record:
+                print(stroke.x, stroke.y)
             if stroke is None or Inter.init == False:
                 break
 
@@ -48,5 +50,11 @@ class Inter:
         try:
             if key == keyboard.Key.end:
                 Inter.init = False
+            # elif key == keyboard.Key.f8:
+            #     Inter.record = True
+            #     print("开始记录......")
+            # elif key == keyboard.Key.f9:
+            #     Inter.record = False
+            #     print("停止记录......")
         except NameError:
             pass

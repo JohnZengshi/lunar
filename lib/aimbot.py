@@ -40,8 +40,8 @@ class Aimbot:
 
     with open(config_file, 'r') as f:
         setting_config = json.load(f)
-    long_distance_pixel_increment = setting_config['long_distance_pixel_increment']
-    close_distance_pixel_increment = setting_config['close_distance_pixel_increment']
+    # long_distance_pixel_increment = setting_config['long_distance_pixel_increment']
+    # close_distance_pixel_increment = setting_config['close_distance_pixel_increment']
     aimbot_status = colored("ENABLED", 'green')
     half_screen_width = ctypes.windll.user32.GetSystemMetrics(
         0)/2  # this should always be 960
@@ -107,10 +107,10 @@ class Aimbot:
         else:
             return  # TODO
 
-        if self.aim_width != DEFAULT_AIM_WIDTH:
-            Aimbot.pixel_increment = Aimbot.close_distance_pixel_increment
-        else:
-            Aimbot.pixel_increment = Aimbot.long_distance_pixel_increment
+        # if self.aim_width != DEFAULT_AIM_WIDTH:
+        #     Aimbot.pixel_increment = Aimbot.close_distance_pixel_increment
+        # else:
+        #     Aimbot.pixel_increment = Aimbot.long_distance_pixel_increment
 
         for rel_x, rel_y in Aimbot.interpolate_coordinates_from_center((x, y), scale):
             self.inter.inter.set_filter(
@@ -128,28 +128,68 @@ class Aimbot:
         # generator yields pixel tuples for relative movement
     def interpolate_coordinates_from_center(absolute_coordinates, scale):
         diff_x = (
-            absolute_coordinates[0] - Aimbot.half_screen_width) * scale/Aimbot.pixel_increment
+            absolute_coordinates[0] - Aimbot.half_screen_width) * scale
         diff_y = (
-            absolute_coordinates[1] - Aimbot.half_screen_height) * scale/Aimbot.pixel_increment
+            absolute_coordinates[1] - Aimbot.half_screen_height) * scale
 
         # 防止抖动
         length = int(math.dist((0, 0), (diff_x, diff_y)))
-        if length <= 2:
+        if length <= 4:
             return
 
+        # 旧方案
         # print(f"diff_x:{diff_x},diff_y:{diff_y},length:{length}")
-        x = y = sum_x = sum_y = 0
-        pixel_increment = Aimbot.pixel_increment
+        # x = y = sum_x = sum_y = 0
+        # pixel_increment = Aimbot.pixel_increment
 
-        for k in range(0, length):
-            unit_x = round(diff_x/length) * pixel_increment
-            unit_y = round(diff_y/length) * pixel_increment
+        # for k in range(0, length):
+        #     unit_x = round(diff_x/length)
+        #     unit_y = round(diff_y/length)
 
-            sum_x += x
-            sum_y += y
+        #     sum_x += x
+        #     sum_y += y
 
-            x, y = round(unit_x * k - sum_x), round(unit_y * k - sum_y)
-            yield x, y
+        #     x, y = round(unit_x * k - sum_x), round(unit_y * k - sum_y)
+        #     yield x, y
+
+        # 新方案
+        # 近距离
+        if length <= 30:
+            for k in range(0, length):
+                x = y = 0
+                while x == 0 and y == 0:
+                    if diff_x > 0:
+                        x = random.choice([0, 1])
+                    else:
+                        x = random.choice([-1, 0])
+
+                    if diff_y > 0:
+                        y = random.choice([0, 1])
+                    else:
+                        y = random.choice([-1, 0])
+                yield x, y
+        # 远距离
+        else:
+            for k in range(0, length):
+                x = Aimbot.accelerate_decelerate(k, length)
+                y = Aimbot.accelerate_decelerate(k, length)
+
+                if diff_x > 0:
+                    x = min(x, diff_x)
+                else:
+                    x = max(-x, diff_x)
+
+                if diff_y > 0:
+                    y = min(y, diff_y)
+                else:
+                    y = max(-y, diff_y)
+
+                diff_x -= x
+                diff_y -= y
+
+                if x != 0 or y != 0:
+                    yield round(x), round(y)
+    # 判断点是否在自瞄范围内
 
     def is_point_inside_rectangle(self, x0, y0):
         screen_width = Aimbot.half_screen_width * 2
@@ -165,16 +205,20 @@ class Aimbot:
         else:
             return False
 
-    def accelerate_decelerate(start, end, steps, num_cycles=1):
-        """在for循环中产生加速减速效果的值序列"""
-        values = []
-        num_steps = steps * num_cycles
-        for step in range(num_steps):
-            t = step / float(num_steps - 1)  # 控制时间从0到1的变化
-            acceleration = math.sin(t * math.pi)  # 使用sin函数实现加速减速效果
-            x = start + acceleration * (end - start)
-            values.append(x)
-        return round(values)
+    # 获取加减速值
+    def accelerate_decelerate(k, total_steps):
+        max_speed = 5
+        acceleration_phase = total_steps // 2
+        deceleration_phase = total_steps - acceleration_phase
+
+        if k < acceleration_phase:
+            speed = (k + 1) * max_speed // acceleration_phase
+        else:
+            deceleration_steps = k - acceleration_phase
+            speed = (deceleration_phase - deceleration_steps) * \
+                max_speed // deceleration_phase
+
+        return speed
 
     def start(self):
         print("[INFO] Beginning screen capture")
@@ -231,23 +275,23 @@ class Aimbot:
             root = tk.Tk()
             root.title("参数设置")
 
-            def update_long_distance_pixel_increment(value):
-                Aimbot.long_distance_pixel_increment = float(value)
-                Aimbot.setting_config['long_distance_pixel_increment'] = value
-                with open(config_file, 'w') as file:
-                    json.dump(Aimbot.setting_config, file, indent=4)
+            # def update_long_distance_pixel_increment(value):
+            #     Aimbot.long_distance_pixel_increment = float(value)
+            #     Aimbot.setting_config['long_distance_pixel_increment'] = value
+            #     with open(config_file, 'w') as file:
+            #         json.dump(Aimbot.setting_config, file, indent=4)
 
-            Aimbot.gen_slider_ui(root=root, default=Aimbot.long_distance_pixel_increment,
-                                 label="远距离拉枪速度：", from_=0.1, to=1, callback=update_long_distance_pixel_increment)
+            # Aimbot.gen_slider_ui(root=root, default=Aimbot.long_distance_pixel_increment,
+            #                      label="远距离拉枪速度：", from_=0.1, to=1, callback=update_long_distance_pixel_increment)
 
-            def update_close_distance_pixel_increment(value):
-                Aimbot.close_distance_pixel_increment = float(value)
-                Aimbot.setting_config['close_distance_pixel_increment'] = value
-                with open(config_file, 'w') as file:
-                    json.dump(Aimbot.setting_config, file, indent=4)
+            # def update_close_distance_pixel_increment(value):
+            #     Aimbot.close_distance_pixel_increment = float(value)
+            #     Aimbot.setting_config['close_distance_pixel_increment'] = value
+            #     with open(config_file, 'w') as file:
+            #         json.dump(Aimbot.setting_config, file, indent=4)
 
-            Aimbot.gen_slider_ui(root=root, default=Aimbot.close_distance_pixel_increment,
-                                 label="近距离拉枪速度：", from_=0.1, to=2, callback=update_close_distance_pixel_increment)
+            # Aimbot.gen_slider_ui(root=root, default=Aimbot.close_distance_pixel_increment,
+            #                      label="近距离拉枪速度：", from_=0.1, to=2, callback=update_close_distance_pixel_increment)
 
             def aim_key_on_select(selected_value):
                 Aimbot.aimkey = selected_value
