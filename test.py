@@ -1,40 +1,39 @@
-import math
-
-diff_x = 50
-diff_y = -50
-length = int(math.dist((0, 0), (diff_x, diff_y)))
-
-
-def accelerate_decelerate(k, total_steps):
-    max_speed = 9
-    acceleration_phase = total_steps // 2
-    deceleration_phase = total_steps - acceleration_phase
-
-    if k < acceleration_phase:
-        speed = (k + 1) * max_speed // acceleration_phase
-    else:
-        deceleration_steps = k - acceleration_phase
-        speed = (deceleration_phase - deceleration_steps) * \
-            max_speed // deceleration_phase
-
-    return speed
+import win32gui
+import win32con
+import win32process
+import win32event
+import win32api
 
 
-for k in range(0, length):
-    x = accelerate_decelerate(k, length)
-    y = accelerate_decelerate(k, length)
+def hide_process():
+    # 获取当前进程ID
+    pid = win32api.GetCurrentProcessId()
 
-    if diff_x > 0:
-        x = min(x, diff_x)
-    else:
-        x = max(-x, diff_x)
+    # 获取当前进程句柄
+    handle = win32api.OpenProcess(win32con.PROCESS_ALL_ACCESS, False, pid)
 
-    if diff_y > 0:
-        y = min(y, diff_y)
-    else:
-        y = max(-y, diff_y)
+    # 设置进程窗口隐藏
+    win32gui.ShowWindow(win32gui.GetForegroundWindow(), win32con.SW_HIDE)
 
-    diff_x -= x
-    diff_y -= y
+    # 获取Shell进程ID
+    shell_pid = win32process.GetProcessId(win32process.GetShellWindow())
 
-    print(x, y)
+    # 将当前进程的父进程设置为Shell进程
+    win32process.AttachConsole(shell_pid)
+
+    # 创建一个新的控制台窗口，用于隐藏进程输出
+    win32gui.ShowWindow(win32gui.GetForegroundWindow(), win32con.SW_HIDE)
+
+    # 解除对控制台的绑定
+    win32process.FreeConsole()
+
+    # 创建一个新的进程组，使得进程在父进程结束时不会受到影响
+    win32process.SetProcessGroupID(handle, 0)
+
+    # 关闭进程句柄
+    win32api.CloseHandle(handle)
+
+
+if __name__ == "__main__":
+    hide_process()
+    # 在这里添加您需要隐藏执行的代码

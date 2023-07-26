@@ -51,6 +51,8 @@ class Aimbot:
     aimtarget = setting_config["aimtarget"]
     det_box_width = 0
 
+    sensitivity = float(setting_config["sensitivity"])
+
     def __init__(self, box_constant=416, collect_data=False, mouse_delay=0.0001, debug=False):
         # controls the initial centered box width and height of the "Lunar Vision" window
         # controls the size of the detection box (equaling the width and height)
@@ -123,7 +125,8 @@ class Aimbot:
             sleep_time = random.uniform(0.4, 1.4)
             # print("sleepTime:", sleep_time)
             if sleep_time > 1:
-                time.sleep(sleep_time / 1_000_000_000_000)
+                time.sleep(sleep_time / 0.8 *
+                           Aimbot.sensitivity / 1_000_000_000_000)
 
         # generator yields pixel tuples for relative movement
     def interpolate_coordinates_from_center(absolute_coordinates, scale):
@@ -139,56 +142,56 @@ class Aimbot:
 
         # 旧方案
         # print(f"diff_x:{diff_x},diff_y:{diff_y},length:{length}")
-        # x = y = sum_x = sum_y = 0
         # pixel_increment = Aimbot.pixel_increment
+        x = y = sum_x = sum_y = 0
+        for k in range(0, length):
+            unit_x = round(diff_x/length)
+            unit_y = round(diff_y/length)
 
-        # for k in range(0, length):
-        #     unit_x = round(diff_x/length)
-        #     unit_y = round(diff_y/length)
+            sum_x += x
+            sum_y += y
 
-        #     sum_x += x
-        #     sum_y += y
-
-        #     x, y = round(unit_x * k - sum_x), round(unit_y * k - sum_y)
-        #     yield x, y
+            x, y = round(unit_x * k - sum_x), round(unit_y * k - sum_y)
+            yield x, y
 
         # 新方案
         # 近距离
-        if length <= 30:
-            for k in range(0, length):
-                x = y = 0
-                while x == 0 and y == 0:
-                    if diff_x > 0:
-                        x = random.choice([0, 1])
-                    else:
-                        x = random.choice([-1, 0])
+        # if length <= 30:
+        # for k in range(0, length):
+        #     x = y = 0
+        #     while x == 0 and y == 0:
+        #         if diff_x > 0:
+        #             x = random.choice([0, 1])
+        #         else:
+        #             x = random.choice([-1, 0])
 
-                    if diff_y > 0:
-                        y = random.choice([0, 1])
-                    else:
-                        y = random.choice([-1, 0])
-                yield x, y
+        #         if diff_y > 0:
+        #             y = random.choice([0, 1])
+        #         else:
+        #             y = random.choice([-1, 0])
+
+        #     yield x, y
         # 远距离
-        else:
-            for k in range(0, length):
-                x = Aimbot.accelerate_decelerate(k, length)
-                y = Aimbot.accelerate_decelerate(k, length)
+        # else:
+        #     for k in range(0, length):
+        #         x = Aimbot.accelerate_decelerate(k, length)
+        #         y = Aimbot.accelerate_decelerate(k, length)
 
-                if diff_x > 0:
-                    x = min(x, diff_x)
-                else:
-                    x = max(-x, diff_x)
+        #         if diff_x > 0:
+        #             x = min(x, diff_x)
+        #         else:
+        #             x = max(-x, diff_x)
 
-                if diff_y > 0:
-                    y = min(y, diff_y)
-                else:
-                    y = max(-y, diff_y)
+        #         if diff_y > 0:
+        #             y = min(y, diff_y)
+        #         else:
+        #             y = max(-y, diff_y)
 
-                diff_x -= x
-                diff_y -= y
+        #         diff_x -= x
+        #         diff_y -= y
 
-                if x != 0 or y != 0:
-                    yield round(x), round(y)
+        #         if x != 0 or y != 0:
+        #             yield round(x), round(y)
     # 判断点是否在自瞄范围内
 
     def is_point_inside_rectangle(self, x0, y0):
@@ -241,29 +244,30 @@ class Aimbot:
             nonlocal target_ratio_y
             nonlocal target_ratio_x
             while True:
-                target_ratio_y -= 0.1
+                # target_ratio_y -= 0.1
                 if Aimbot.aimtarget == 0:
-                    if target_ratio_y <= 2.2:
-                        target_ratio_y = DEFAULT_TARGET_HEAD_RATIO
+                    # if target_ratio_y <= 2.2:
+                    target_ratio_y = DEFAULT_TARGET_HEAD_RATIO
                 elif Aimbot.aimtarget == 1:
-                    if target_ratio_y <= 2.2:
-                        target_ratio_y = DEFAULT_TARGET_BODY_RATIO
+                    # if target_ratio_y <= 2.2:
+                    target_ratio_y = random.choice(
+                        [DEFAULT_TARGET_BODY_RATIO, DEFAULT_TARGET_HEAD_RATIO])
                 elif Aimbot.aimtarget == 2:
-                    if target_ratio_y <= 3.0:
-                        target_ratio_y = DEFAULT_TARGET_BODY_RATIO
+                    # if target_ratio_y <= 3.0:
+                    target_ratio_y = DEFAULT_TARGET_BODY_RATIO
 
-                if target_ratio_y >= 3.0:
-                    target_ratio_x = DEFAULT_TARGET_X + \
-                        round(random.uniform(-0.10, 0.10), 2)
-                elif self.det_box_width >= 50:
-                    target_ratio_x = DEFAULT_TARGET_X + \
-                        round(random.uniform(-0.05, 0.05), 2)
-                else:
-                    target_ratio_x = DEFAULT_TARGET_X
+                # if target_ratio_y >= 3.0:
+                #     target_ratio_x = DEFAULT_TARGET_X + \
+                #         round(random.uniform(-0.10, 0.10), 2)
+                # elif self.det_box_width >= 50:
+                #     target_ratio_x = DEFAULT_TARGET_X + \
+                #         round(random.uniform(-0.05, 0.05), 2)
+                # else:
+                #     target_ratio_x = DEFAULT_TARGET_X
 
                 # print(self.det_box_width)
 
-                time.sleep(2)
+                time.sleep(4)
 
         thread_1 = threading.Thread(target=update_target_ratio)
         thread_1.daemon = True
@@ -292,6 +296,15 @@ class Aimbot:
 
             # Aimbot.gen_slider_ui(root=root, default=Aimbot.close_distance_pixel_increment,
             #                      label="近距离拉枪速度：", from_=0.1, to=2, callback=update_close_distance_pixel_increment)
+
+            def update_sensitivity(value):
+                Aimbot.sensitivity = float(value)
+                Aimbot.setting_config['sensitivity'] = value
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
+
+            Aimbot.gen_slider_ui(root=root, default=Aimbot.sensitivity,
+                                 label="游戏灵敏度：", from_=0.1, to=1, callback=update_sensitivity)
 
             def aim_key_on_select(selected_value):
                 Aimbot.aimkey = selected_value
@@ -374,14 +387,15 @@ class Aimbot:
 
                     self.det_box_width = closest_detection["x2y2"][0] - \
                         closest_detection["x1y1"][0]
-                    det_box_height = closest_detection["x2y2"][1] - \
-                        closest_detection["x1y1"][1]
-                    if self.det_box_width > DEFAULT_AIM_WIDTH:
-                        self.aim_width = self.det_box_width * 3
-                        self.aim_height = det_box_height
-                    else:
-                        self.aim_width = DEFAULT_AIM_WIDTH
-                        self.aim_height = DEFAULT_AIM_HEIGHT
+
+                    # det_box_height = closest_detection["x2y2"][1] - \
+                    #     closest_detection["x1y1"][1]
+                    # if self.det_box_width > DEFAULT_AIM_WIDTH:
+                    #     self.aim_width = self.det_box_width * 3
+                    #     self.aim_height = det_box_height
+                    # else:
+                    #     self.aim_width = DEFAULT_AIM_WIDTH
+                    #     self.aim_height = DEFAULT_AIM_HEIGHT
 
                     x1 = int((detection_box["width"] - self.aim_width) // 2)
                     y1 = int((detection_box['height'] - self.aim_height) // 2)

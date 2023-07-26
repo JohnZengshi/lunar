@@ -1,7 +1,7 @@
 '''
 LastEditors: John
 Date: 2023-07-18 10:06:51
-LastEditTime: 2023-07-25 16:29:22
+LastEditTime: 2023-07-26 08:34:14
 Author: John
 '''
 
@@ -50,11 +50,11 @@ class Inter:
         try:
             if key == keyboard.Key.end:
                 Inter.init = False
-            # elif key == keyboard.Key.f8:
-            #     Inter.record = True
-            #     print("开始记录......")
-            # elif key == keyboard.Key.f9:
-            #     Inter.record = False
-            #     print("停止记录......")
+            elif key == keyboard.Key.f8:
+                Inter.record = True
+                print("开始记录......")
+            elif key == keyboard.Key.f9:
+                Inter.record = False
+                print("停止记录......")
         except NameError:
             pass
