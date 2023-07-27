@@ -6,5 +6,7 @@ lib/yolov5-master
 training
 tool/images
 dist
+build
 env
+__pycache__
 

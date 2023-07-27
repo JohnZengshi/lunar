@@ -22,4 +22,8 @@ REM pyvenv.cfg文件已成功修改。
 
 
 REM 打开 PowerShell 并激活 Python 虚拟环境
-powershell.exe -Command "Set-ExecutionPolicy RemoteSigned;env\Scripts\activate;python lunar.py"
+if exist %cd%\lunar.pyc (
+  powershell.exe -Command "Set-ExecutionPolicy RemoteSigned;env\Scripts\activate;python lunar.pyc"
+) else (
+  powershell.exe -Command "Set-ExecutionPolicy RemoteSigned;env\Scripts\activate;python lunar.py"
+)
