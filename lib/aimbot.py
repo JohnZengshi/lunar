@@ -218,8 +218,8 @@ class Aimbot:
             speed = (k + 1) * max_speed // acceleration_phase
         else:
             deceleration_steps = k - acceleration_phase
-            speed = (deceleration_phase - deceleration_steps) * \
-                max_speed // deceleration_phase
+            speed = ((deceleration_phase - deceleration_steps) *
+                     max_speed // deceleration_phase)
 
         return speed
 
@@ -385,8 +385,8 @@ class Aimbot:
                     cv2.rectangle(
                         frame, closest_detection["x1y1"], closest_detection["x2y2"], (115, 244, 113), 2)
 
-                    self.det_box_width = closest_detection["x2y2"][0] - \
-                        closest_detection["x1y1"][0]
+                    self.det_box_width = (closest_detection["x2y2"][0] -
+                                          closest_detection["x1y1"][0])
 
                     # det_box_height = closest_detection["x2y2"][1] - \
                     #     closest_detection["x1y1"][1]
@@ -413,9 +413,9 @@ class Aimbot:
                     cv2.line(frame, (closest_detection["relative_head_X"], closest_detection["relative_head_Y"]), (
                         self.box_constant//2, self.box_constant//2), (244, 242, 113), 2)
 
-                    absolute_head_X, absolute_head_Y = closest_detection["relative_head_X"] + \
-                        detection_box['left'], closest_detection["relative_head_Y"] + \
-                        detection_box['top']
+                    absolute_head_X, absolute_head_Y = (closest_detection["relative_head_X"] +
+                                                        detection_box['left'], closest_detection["relative_head_Y"] +
+                                                        detection_box['top'])
 
                     x1, y1 = closest_detection["x1y1"]
                     if Aimbot.is_target_locked(absolute_head_X, absolute_head_Y):
