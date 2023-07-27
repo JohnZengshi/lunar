@@ -1,7 +1,7 @@
 '''
 LastEditors: John
 Date: 2023-07-16 13:26:01
-LastEditTime: 2023-07-23 21:20:06
+LastEditTime: 2023-07-27 15:35:14
 Author: John
 '''
 import os
@@ -29,7 +29,7 @@ def main():
     # validator.check_key_file()
 
     global lunar
-    lunar = Aimbot(collect_data="collect_data" in sys.argv)
+    lunar = Aimbot()
     lunar.start()
 
 
