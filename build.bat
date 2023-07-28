@@ -34,24 +34,24 @@ copy /y "%source_folder%start.bat" "%destination_folder%"
 copy /y "%source_folder%requirements.txt" "%destination_folder%"
 
 REM 执行 pyarmor gen 命令
-@REM pyarmor gen --output %destination_folder%lib\ %source_folder%lib\aimbot.py
-@REM pyarmor gen --output %destination_folder%lib\ %source_folder%lib\inter.py
-@REM pyarmor gen --output %destination_folder%lib\ %source_folder%lib\key_validator.py
-@REM pyarmor gen %source_folder%lunar.py
+pyarmor gen --output %destination_folder%lib\ %source_folder%lib\aimbot.py
+pyarmor gen --output %destination_folder%lib\ %source_folder%lib\inter.py
+pyarmor gen --output %destination_folder%lib\ %source_folder%lib\key_validator.py
+pyarmor gen --output %destination_folder% lunar.py
 
-REM 混淆
-call python .\tool\anubis.py lunar.py lib\aimbot.py lib\inter.py lib\key_validator.py
+@REM REM 混淆
+@REM call python .\tool\anubis.py lunar.py lib\aimbot.py lib\inter.py lib\key_validator.py
 
-rem 使用py_compile编译Python文件
-call python -m py_compile %lunar%-obf.py %source_folder%lib\%aimbot%-obf.py %source_folder%lib\%inter%-obf.py %source_folder%lib\%key_validator%-obf.py 
+@REM rem 使用py_compile编译Python文件
+@REM call python -m py_compile %lunar%-obf.py %source_folder%lib\%aimbot%-obf.py %source_folder%lib\%inter%-obf.py %source_folder%lib\%key_validator%-obf.py 
 
 
-rem 将编译后的.pyc文件复制到指定文件夹，并重命名
-copy %__pycache__%%lunar%-obf.cpython-38.pyc %destination_folder%\%lunar%.pyc
+@REM rem 将编译后的.pyc文件复制到指定文件夹，并重命名
+@REM copy %__pycache__%%lunar%-obf.cpython-38.pyc %destination_folder%\%lunar%.pyc
 
-copy %lib__pycache__%%aimbot%-obf.cpython-38.pyc %destination_folder%lib\%aimbot%.pyc
-copy %lib__pycache__%%inter%-obf.cpython-38.pyc %destination_folder%lib\%inter%.pyc
-copy %lib__pycache__%%key_validator%-obf.cpython-38.pyc %destination_folder%lib\%key_validator%.pyc
+@REM copy %lib__pycache__%%aimbot%-obf.cpython-38.pyc %destination_folder%lib\%aimbot%.pyc
+@REM copy %lib__pycache__%%inter%-obf.cpython-38.pyc %destination_folder%lib\%inter%.pyc
+@REM copy %lib__pycache__%%key_validator%-obf.cpython-38.pyc %destination_folder%lib\%key_validator%.pyc
 
 
 endlocal
