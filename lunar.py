@@ -1,7 +1,7 @@
 '''
 LastEditors: John
 Date: 2023-07-16 13:26:01
-LastEditTime: 2023-07-27 21:45:59
+LastEditTime: 2023-07-28 11:46:53
 Author: John
 '''
 import os
@@ -9,9 +9,6 @@ import sys
 
 from pynput import keyboard
 from termcolor import colored
-
-from lib.inter import Inter
-from lib.key_validator import KeyValidator
 
 
 def on_release(key):
@@ -25,6 +22,7 @@ def on_release(key):
 
 
 def main():
+    # from lib.key_validator import KeyValidator
     # validator = KeyValidator()
     # validator.check_key_file()
 
