@@ -1,0 +1,12 @@
+lib/config
+lib/data
+lib/__pycache__
+lib/Python38
+lib/yolov5-master
+training
+tool/images
+dist
+build
+env
+__pycache__
+
