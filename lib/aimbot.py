@@ -24,10 +24,11 @@ from lib.interception_py.stroke import mouse_stroke
 
 # from lib.memory import SharedMemoryWriter
 
-DEFAULT_AIM_WIDTH = 64
+DETECTION_BOX = 200
+DEFAULT_AIM_WIDTH = 128
 DEFAULT_AIM_HEIGHT = 128
 
-DEFAULT_TARGET_HEAD_RATIO = 2.7
+DEFAULT_TARGET_HEAD_RATIO = 2.5
 DEFAULT_TARGET_BODY_RATIO = 3.5
 
 config_file = "lib/config/config.json"
@@ -53,14 +54,19 @@ class Aimbot:
 
     sensitivity = float(setting_config["sensitivity"])
 
-    def __init__(self, box_constant=416, collect_data=False, mouse_delay=0.0001, debug=False):
+    absolute_head_X = 0
+    absolute_head_Y = 0
+
+    total_length = 0
+
+    def __init__(self, box_constant=DETECTION_BOX, collect_data=False, mouse_delay=0.0001, debug=False):
         # controls the initial centered box width and height of the "Lunar Vision" window
         # controls the size of the detection box (equaling the width and height)
         self.box_constant = box_constant
 
         print("[INFO] Loading the neural network model")
         self.model = torch.hub.load(
-            'lib/yolov5-master', 'custom', path='lib/bestv2.pt', source='local', force_reload=True)
+            'lib/yolov5-master', 'custom', path='lib/bestv2.pt', source='local', force_reload=False)
         if torch.cuda.is_available():
             print(colored("CUDA ACCELERATION [ENABLED]", "green"))
         else:
@@ -71,6 +77,8 @@ class Aimbot:
         # base confidence threshold (or base detection (0-1)
         self.model.conf = 0.45
         self.model.iou = 0.45  # NMS IoU (0-1)
+        # self.model.max_det = 500
+        # self.model.amp = True
         self.collect_data = collect_data
         self.mouse_delay = mouse_delay
         self.debug = debug
@@ -98,6 +106,9 @@ class Aimbot:
     def is_targeted():
         return True if win32api.GetKeyState(int(Aimbot.aimkey, 16)) in (-127, -128) else False
 
+    def is_fire():
+        return True if win32api.GetKeyState(int("0x01", 16)) in (-127, -128) else False
+
     def is_target_locked(x, y):
         # plus/minus 5 pixel threshold
         threshold = 5
@@ -107,7 +118,11 @@ class Aimbot:
         if Aimbot.is_targeted() and Aimbot.is_point_inside_rectangle(self, x, y):
             scale = 1
         else:
+            Aimbot.total_length = 0
             return  # TODO
+
+        if Aimbot.is_target_locked(x, y):
+            return
 
         # if self.aim_width != DEFAULT_AIM_WIDTH:
         #     Aimbot.pixel_increment = Aimbot.close_distance_pixel_increment
@@ -121,38 +136,55 @@ class Aimbot:
             # print(rel_x, rel_y)
             stroke = mouse_stroke(0, 0, 0, rel_x, rel_y, 0)
             self.inter.inter.send(Inter.mdevice, stroke)
-
-            sleep_time = random.uniform(0.4, 1.4)
+            Aimbot.delayMicrosecond(150)
+            # sleep_time = random.uniform(0.4, 1.4)
             # print("sleepTime:", sleep_time)
-            if sleep_time > 1:
-                time.sleep(sleep_time / 0.8 *
-                           Aimbot.sensitivity / 1_000_000_000_000)
+            # if sleep_time > 1:
+            #     time.sleep(sleep_time / 0.8 *
+            #                Aimbot.sensitivity / 1_000_000_000_000_000)
 
         # generator yields pixel tuples for relative movement
+
     def interpolate_coordinates_from_center(absolute_coordinates, scale):
         diff_x = (
             absolute_coordinates[0] - Aimbot.half_screen_width) * scale
         diff_y = (
             absolute_coordinates[1] - Aimbot.half_screen_height) * scale
 
-        # 防止抖动
         length = int(math.dist((0, 0), (diff_x, diff_y)))
-        if length <= 4:
+
+        # if (Aimbot.total_length < length):
+        #     return
+        # if Aimbot.is_target_locked(Aimbot.absolute_head_X, Aimbot.absolute_head_Y):
+        #     length = 0
+        #     return
+        # 防止抖动
+
+        # print(length, diff_x, diff_y)
+        # if length <= 5:
+        #     return
+
+        # if Aimbot.total_length != 0:
+        #     return
+
+        Aimbot.total_length = length
+
+        # print(length)
+        if length == 0:
             return
+        # yield int(diff_x / abs(diff_x or 1)) * 1, int(diff_y / abs(diff_y or 1)) * 1
 
         # 旧方案
         # print(f"diff_x:{diff_x},diff_y:{diff_y},length:{length}")
         # pixel_increment = Aimbot.pixel_increment
-        x = y = sum_x = sum_y = 0
-        for k in range(0, length):
-            unit_x = round(diff_x/length)
-            unit_y = round(diff_y/length)
-
-            sum_x += x
-            sum_y += y
-
-            x, y = round(unit_x * k - sum_x), round(unit_y * k - sum_y)
-            yield x, y
+        # x = y = sum_x = sum_y = 0
+        # unit_x = round(diff_x/length)
+        # unit_y = round(diff_y/length)
+        # for k in range(0, length):
+        #     sum_x += x
+        #     sum_y += y
+        #     x, y = round(unit_x * k - sum_x), round(unit_y * k - sum_y)
+        #     yield x, y
 
         # 新方案
         # 近距离
@@ -173,25 +205,28 @@ class Aimbot:
         #     yield x, y
         # 远距离
         # else:
-        #     for k in range(0, length):
-        #         x = Aimbot.accelerate_decelerate(k, length)
-        #         y = Aimbot.accelerate_decelerate(k, length)
+        # max_diff = 3
+        for k in range(0, length):
+            x = Aimbot.accelerate_decelerate(k, length)
+            y = Aimbot.accelerate_decelerate(k, length)
 
-        #         if diff_x > 0:
-        #             x = min(x, diff_x)
-        #         else:
-        #             x = max(-x, diff_x)
+            if diff_x > 0:
+                x = min(x, diff_x)
+            else:
+                x = max(-x, diff_x)
 
-        #         if diff_y > 0:
-        #             y = min(y, diff_y)
-        #         else:
-        #             y = max(-y, diff_y)
+            if diff_y > 0:
+                y = min(y, diff_y)
+            else:
+                y = max(-y, diff_y)
 
-        #         diff_x -= x
-        #         diff_y -= y
+            diff_x -= x
+            diff_y -= y
 
-        #         if x != 0 or y != 0:
-        #             yield round(x), round(y)
+            # print(diff_x, diff_y)
+
+            if x != 0 or y != 0:
+                yield round(x), round(y)
     # 判断点是否在自瞄范围内
 
     def is_point_inside_rectangle(self, x0, y0):
@@ -232,8 +267,8 @@ class Aimbot:
                          'top': int(Aimbot.half_screen_height - self.box_constant//2),
                          'width': int(self.box_constant),  # width of the box
                          'height': int(self.box_constant)}  # height of the box
-        if self.collect_data:
-            collect_pause = 0
+        # if self.collect_data:
+        #     collect_pause = 0
 
         # 定时修改瞄准比值（伪随机决定瞄准位置）
         target_ratio_y = DEFAULT_TARGET_BODY_RATIO
@@ -297,14 +332,14 @@ class Aimbot:
             # Aimbot.gen_slider_ui(root=root, default=Aimbot.close_distance_pixel_increment,
             #                      label="近距离拉枪速度：", from_=0.1, to=2, callback=update_close_distance_pixel_increment)
 
-            def update_sensitivity(value):
-                Aimbot.sensitivity = float(value)
-                Aimbot.setting_config['sensitivity'] = value
-                with open(config_file, 'w') as file:
-                    json.dump(Aimbot.setting_config, file, indent=4)
+            # def update_sensitivity(value):
+            #     Aimbot.sensitivity = float(value)
+            #     Aimbot.setting_config['sensitivity'] = value
+            #     with open(config_file, 'w') as file:
+            #         json.dump(Aimbot.setting_config, file, indent=4)
 
-            Aimbot.gen_slider_ui(root=root, default=Aimbot.sensitivity,
-                                 label="游戏灵敏度：", from_=0.1, to=1, callback=update_sensitivity)
+            # Aimbot.gen_slider_ui(root=root, default=Aimbot.sensitivity,
+            #                      label="游戏灵敏度：", from_=0.1, to=1, callback=update_sensitivity)
 
             def aim_key_on_select(selected_value):
                 Aimbot.aimkey = selected_value
@@ -313,7 +348,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_select_ui(root=root, default=Aimbot.aimkey, label="选择自瞄按键：", options=[
-                                 "Ctrl", "Shift", "鼠标上侧键", "鼠标下侧键"], values=["0x11", "0x10", "0x06", "0x05"], callback=aim_key_on_select)
+                                 "Ctrl", "Shift", "鼠标上侧键", "鼠标下侧键", "鼠标左键", "鼠标右键"], values=["0x11", "0x10", "0x06", "0x05", "0x01", "0x02"], callback=aim_key_on_select)
 
             def aim_target_on_select(selected_value):
                 Aimbot.aimtarget = selected_value
@@ -331,12 +366,16 @@ class Aimbot:
         thread_2.daemon = True
         thread_2.start()
 
+        # thread_3 = threading.Thread(target=Aimbot.aimStart, args=(self,))
+        # thread_3.daemon = True
+        # thread_3.start()
+
         while True:
             start_time = time.perf_counter()
             frame = np.array(Aimbot.screen.grab(detection_box))
-            if self.collect_data:
-                orig_frame = np.copy((frame))
-            results = self.model(frame)
+            # if self.collect_data:
+            #     orig_frame = np.copy((frame))
+            results = self.model(frame, size=DETECTION_BOX)
 
             if len(results.xyxy[0]) != 0:  # player detected
                 least_crosshair_dist = closest_detection = player_in_frame = False
@@ -388,15 +427,6 @@ class Aimbot:
                     self.det_box_width = (closest_detection["x2y2"][0] -
                                           closest_detection["x1y1"][0])
 
-                    # det_box_height = closest_detection["x2y2"][1] - \
-                    #     closest_detection["x1y1"][1]
-                    # if self.det_box_width > DEFAULT_AIM_WIDTH:
-                    #     self.aim_width = self.det_box_width * 3
-                    #     self.aim_height = det_box_height
-                    # else:
-                    #     self.aim_width = DEFAULT_AIM_WIDTH
-                    #     self.aim_height = DEFAULT_AIM_HEIGHT
-
                     x1 = int((detection_box["width"] - self.aim_width) // 2)
                     y1 = int((detection_box['height'] - self.aim_height) // 2)
                     x2 = int(x1 + self.aim_width)
@@ -427,19 +457,35 @@ class Aimbot:
                         cv2.putText(frame, "TARGETING", (x1 + 40, y1),
                                     cv2.FONT_HERSHEY_DUPLEX, 0.5, (115, 113, 244), 2)
 
+                    Aimbot.absolute_head_X = absolute_head_X
+                    Aimbot.absolute_head_Y = absolute_head_Y
                     if Aimbot.is_aimbot_enabled():
                         Aimbot.move_crosshair(
                             self, absolute_head_X, absolute_head_Y)
 
-            if self.collect_data and time.perf_counter() - collect_pause > 1 and Aimbot.is_targeted() and Aimbot.is_aimbot_enabled() and not player_in_frame:  # screenshots can only be taken every 1 second
-                cv2.imwrite(f"lib/data/{str(uuid.uuid4())}.jpg", orig_frame)
-                collect_pause = time.perf_counter()
+            # if self.collect_data and time.perf_counter() - collect_pause > 1 and Aimbot.is_targeted() and Aimbot.is_aimbot_enabled() and not player_in_frame:  # screenshots can only be taken every 1 second
+            #     cv2.imwrite(f"lib/data/{str(uuid.uuid4())}.jpg", orig_frame)
+            #     collect_pause = time.perf_counter()
 
             cv2.putText(frame, f"FPS: {int(1/(time.perf_counter() - start_time))}",
                         (5, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (113, 116, 244), 2)
-            # cv2.imshow("Lunar Vision", frame)
-            # if cv2.waitKey(1) & 0xFF == ord('0'):
-            #     break
+            cv2.imshow("Lunar Vision", frame)
+            if cv2.waitKey(1) & 0xFF == ord('0'):
+                break
+
+    def aimStart(self):
+        # def func(): Aimbot.total_length = 0
+        # timer_thread = threading.Thread(
+        #     target=Aimbot.timer_function, args=(1, func))
+        # timer_thread.daemon = True  # 设置为守护线程，主程序退出时定时器线程也会退出
+        # timer_thread.start()
+
+        while True:
+            if Aimbot.is_aimbot_enabled():
+                Aimbot.move_crosshair(
+                    self, Aimbot.absolute_head_X, Aimbot.absolute_head_Y)
+            time.sleep(1 / 1_000_000_000_000_000)
+            # Aimbot.delayMicrosecond(1)
 
     def gen_select_ui(root: tk.Tk, default: Any, label: str, options: List[str], values: List[Any], callback: Callable[[Any], None]):
         frame = tk.Frame(root)
@@ -487,6 +533,25 @@ class Aimbot:
                           length=300, resolution=0.1, command=update)
         slider.set(default)
         slider.pack(pady=10)
+
+    def timer_function(interval, func, *args,):
+        """
+        不阻塞的定时器函数
+        :param interval: 定时器的时间间隔（秒）
+        :param func: 定时器触发时执行的函数
+        :param args: func函数的位置参数
+        :param kwargs: func函数的关键字参数
+        """
+        while True:
+            time.sleep(interval)  # 等待指定的时间间隔
+            func(*args)  # 执行传入的函数
+
+    def delayMicrosecond(t):    # 微秒级延时函数
+        start, end = 0, 0           # 声明变量
+        start = time.time()       # 记录开始时间
+        t = (t-3)/1000000     # 将输入t的单位转换为秒，-3是时间补偿
+        while end-start < t:  # 循环至时间差值大于或等于设定值时
+            end = time.time()     # 记录结束时间
 
     def clean_up():
         print("\n[INFO] END WAS PRESSED. QUITTING...")
