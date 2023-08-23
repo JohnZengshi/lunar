@@ -125,17 +125,20 @@ class Aimbot:
 
     def is_target_locked(x, y):
         # plus/minus 5 pixel threshold
-        threshold = 5
+        threshold = 2
         return True if 960 - threshold <= x <= 960 + threshold and 540 - threshold <= y <= 540 + threshold else False
 
     def move_crosshair(self, x, y):
-        if Aimbot.is_targeted() and Aimbot.is_point_inside_rectangle(self, x, y) and Aimbot.is_fire() == False:
+        if Aimbot.is_targeted() and Aimbot.is_point_inside_rectangle(self, x, y):
+            # and Aimbot.is_fire() == False
             # if int(Aimbot.d_time) == 0:
             #     Aimbot.d_time = time.perf_counter()
             # print("开始记录==============")
             scale = 1 / Aimbot.sensitivity
         else:
             Aimbot.total_length = 0
+            Aimbot.absolute_head_X = 0
+            Aimbot.absolute_head_Y = 0
             # if int(Aimbot.d_time) > 0:
             #     print(int(1/(time.perf_counter() - Aimbot.d_time)))
             # Aimbot.d_time = 0.00
@@ -154,13 +157,14 @@ class Aimbot:
             stroke.y = rel_y
             self.inter.inter.send(Inter.mdevice, stroke)
             # Aimbot.delayMicrosecond(Aimbot.sensitivity)
-            Aimbot.delayMicrosecond(Aimbot.mouse_delay_microsecond)
+            Aimbot.delayMicrosecond(Aimbot.max_pixel)
             # sleep_time = random.uniform(0.4, 1.4)
             # print("sleepTime:", sleep_time)
             # if sleep_time > 1:
             #     time.sleep(sleep_time / 0.8 *
             #                Aimbot.sensitivity / 1_000_000_000_000_000)
 
+        time.sleep(Aimbot.mouse_delay_microsecond)
         # generator yields pixel tuples for relative movement
 
     def interpolate_coordinates_from_center(absolute_coordinates, scale):
@@ -183,8 +187,12 @@ class Aimbot:
         #     return
 
         # if Aimbot.total_length != 0:
-        #     print(f"锁定：{Aimbot.total_length}")
+        #     # print(f"锁定：{Aimbot.total_length}")
         #     return
+
+        if Aimbot.total_length == length:
+            # print(f"锁定：{Aimbot.total_length}")
+            return
 
         Aimbot.total_length = length
         # print(Aimbot.is_target_locked(
@@ -251,13 +259,6 @@ class Aimbot:
         #         y = min(y, diff_y)
         #     else:
         #         y = max(-y, diff_y)
-
-        #     # abs_diff_x -= abs(x)
-        #     # abs_diff_y -= abs(y)
-        #     # print(abs_diff_x,abs_diff_y)
-        #     # if int(abs_diff_x) <= 0 or int(abs_diff_y) == 0:
-        #     #     return
-        #     # print(diff_x, diff_y)
 
         #     if x != 0 or y != 0:
         #         yield round(x), round(y)
@@ -391,7 +392,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_slider_ui(root=root, default=Aimbot.mouse_delay_microsecond,
-                                 label="设置mouse_delay_microsecond：", from_=1, to=1000, resolution=1, callback=update_mouse_delay_microsecond)
+                                 label="设置mouse_delay_microsecond：", from_=0.01, to=0.1, resolution=0.01, callback=update_mouse_delay_microsecond)
 
             def update_det_model_size(value):
                 Aimbot.det_model_size = int(value)
@@ -409,7 +410,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_slider_ui(root=root, default=Aimbot.aim_width,
-                                 label="设置aim_width：", from_=64, to=128, resolution=1, callback=update_aim_width)
+                                 label="设置aim_width：", from_=2, to=128, resolution=1, callback=update_aim_width)
 
             def update_aim_height(value):
                 Aimbot.aim_height = int(value)
@@ -418,7 +419,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_slider_ui(root=root, default=Aimbot.aim_height,
-                                 label="设置aim_height：", from_=64, to=128, resolution=1, callback=update_aim_height)
+                                 label="设置aim_height：", from_=2, to=128, resolution=1, callback=update_aim_height)
 
             def aim_key_on_select(selected_value):
                 Aimbot.aimkey = selected_value
@@ -445,16 +446,16 @@ class Aimbot:
         thread_2.daemon = True
         thread_2.start()
 
-        # def aim_thread():
-        #     while True:
-        #         if Aimbot.is_aimbot_enabled():
-        #             Aimbot.move_crosshair(
-        #                 self, Aimbot.absolute_head_X, Aimbot.absolute_head_Y)
-        #         time.sleep(0.03)
+        def aim_thread():
+            while True:
+                if Aimbot.is_aimbot_enabled():
+                    Aimbot.move_crosshair(
+                        self, Aimbot.absolute_head_X, Aimbot.absolute_head_Y)
+                time.sleep(0.000000001)
 
-        # thread_3 = threading.Thread(target=aim_thread)
-        # thread_3.daemon = True
-        # thread_3.start()
+        thread_3 = threading.Thread(target=aim_thread)
+        thread_3.daemon = True
+        thread_3.start()
 
         while True:
             start_time = time.perf_counter()
@@ -546,9 +547,9 @@ class Aimbot:
 
                     Aimbot.absolute_head_X = absolute_head_X
                     Aimbot.absolute_head_Y = absolute_head_Y
-                    if Aimbot.is_aimbot_enabled():
-                        Aimbot.move_crosshair(
-                            self, absolute_head_X, absolute_head_Y)
+                    # if Aimbot.is_aimbot_enabled():
+                    #     Aimbot.move_crosshair(
+                    #         self, absolute_head_X, absolute_head_Y)
 
             cv2.putText(frame, f"FPS: {int(1/(time.perf_counter() - start_time))}",
                         (5, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (113, 116, 244), 2)
