@@ -125,7 +125,7 @@ class Aimbot:
 
     def is_target_locked(x, y):
         # plus/minus 5 pixel threshold
-        threshold = 2
+        threshold = 5
         return True if 960 - threshold <= x <= 960 + threshold and 540 - threshold <= y <= 540 + threshold else False
 
     def move_crosshair(self, x, y):
@@ -134,7 +134,7 @@ class Aimbot:
             # if int(Aimbot.d_time) == 0:
             #     Aimbot.d_time = time.perf_counter()
             # print("开始记录==============")
-            scale = 1 / Aimbot.sensitivity
+            scale = Aimbot.sensitivity
         else:
             Aimbot.total_length = 0
             Aimbot.absolute_head_X = 0
@@ -157,14 +157,14 @@ class Aimbot:
             stroke.y = rel_y
             self.inter.inter.send(Inter.mdevice, stroke)
             # Aimbot.delayMicrosecond(Aimbot.sensitivity)
-            Aimbot.delayMicrosecond(Aimbot.max_pixel)
+            Aimbot.delayMicrosecond(Aimbot.mouse_delay_microsecond)
             # sleep_time = random.uniform(0.4, 1.4)
             # print("sleepTime:", sleep_time)
             # if sleep_time > 1:
             #     time.sleep(sleep_time / 0.8 *
             #                Aimbot.sensitivity / 1_000_000_000_000_000)
 
-        time.sleep(Aimbot.mouse_delay_microsecond)
+            # time.sleep(Aimbot.mouse_delay_microsecond)
         # generator yields pixel tuples for relative movement
 
     def interpolate_coordinates_from_center(absolute_coordinates, scale):
@@ -183,7 +183,7 @@ class Aimbot:
         #     Aimbot.total_length = 0
         # 防止抖动
 
-        # if length <= 6:
+        # if length <= 5:
         #     return
 
         # if Aimbot.total_length != 0:
@@ -211,15 +211,29 @@ class Aimbot:
         # 旧方案
         # print(f"diff_x:{diff_x},diff_y:{diff_y},length:{length}")
         # pixel_increment = Aimbot.pixel_increment
-        x = y = sum_x = sum_y = 0
-        unit_x = round(diff_x/length)
-        unit_y = round(diff_y/length)
-        for k in range(0, length):
-            sum_x += x
-            sum_y += y
-            x, y = round(unit_x * k - sum_x), round(unit_y * k - sum_y)
-            # print(sum_x, sum_y)
-            yield x, y
+        # x = y = sum_x = sum_y = 0
+        # unit_x = round(diff_x/length)
+        # unit_y = round(diff_y/length)
+        # for k in range(0, length):
+        #     sum_x += x
+        #     sum_y += y
+        #     x, y = round(unit_x * k - sum_x), round(unit_y * k - sum_y)
+        #     # print(sum_x, sum_y)
+        #     yield x, y
+
+        # for k in range(0, length):
+        #     yield int(diff_x / abs(diff_x or 1)), int(diff_y / abs(diff_y or 1))
+        total_step = int(max(abs(diff_x or 1), abs(diff_y or 1)))
+        dif = int(total_step - int(min(abs(diff_x or 1), abs(diff_y or 1))))
+        dif_array = random.sample(range(total_step), dif)
+        for k in range(0, total_step):
+            if k in dif_array:
+                if abs(diff_x or 1) > abs(diff_y or 1):
+                    yield int(diff_x / abs(diff_x or 1)), 0
+                if abs(diff_x or 1) < abs(diff_y or 1):
+                    yield 0, int(diff_y / abs(diff_y or 1))
+            else:
+                yield int(diff_x / abs(diff_x or 1)), int(diff_y / abs(diff_y or 1))
 
         # 新方案
         # 近距离
@@ -392,7 +406,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_slider_ui(root=root, default=Aimbot.mouse_delay_microsecond,
-                                 label="设置mouse_delay_microsecond：", from_=0.01, to=0.1, resolution=0.01, callback=update_mouse_delay_microsecond)
+                                 label="设置mouse_delay_microsecond：", from_=0, to=1, resolution=0.001, callback=update_mouse_delay_microsecond)
 
             def update_det_model_size(value):
                 Aimbot.det_model_size = int(value)
@@ -446,16 +460,16 @@ class Aimbot:
         thread_2.daemon = True
         thread_2.start()
 
-        def aim_thread():
-            while True:
-                if Aimbot.is_aimbot_enabled():
-                    Aimbot.move_crosshair(
-                        self, Aimbot.absolute_head_X, Aimbot.absolute_head_Y)
-                time.sleep(0.000000001)
+        # def aim_thread():
+        #     while True:
+        #         if Aimbot.is_aimbot_enabled():
+        #             Aimbot.move_crosshair(
+        #                 self, Aimbot.absolute_head_X, Aimbot.absolute_head_Y)
+        #         time.sleep(0.000000001)
 
-        thread_3 = threading.Thread(target=aim_thread)
-        thread_3.daemon = True
-        thread_3.start()
+        # thread_3 = threading.Thread(target=aim_thread)
+        # thread_3.daemon = True
+        # thread_3.start()
 
         while True:
             start_time = time.perf_counter()
@@ -547,9 +561,9 @@ class Aimbot:
 
                     Aimbot.absolute_head_X = absolute_head_X
                     Aimbot.absolute_head_Y = absolute_head_Y
-                    # if Aimbot.is_aimbot_enabled():
-                    #     Aimbot.move_crosshair(
-                    #         self, absolute_head_X, absolute_head_Y)
+                    if Aimbot.is_aimbot_enabled():
+                        Aimbot.move_crosshair(
+                            self, absolute_head_X, absolute_head_Y)
 
             cv2.putText(frame, f"FPS: {int(1/(time.perf_counter() - start_time))}",
                         (5, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (113, 116, 244), 2)
@@ -611,7 +625,7 @@ class Aimbot:
     def delayMicrosecond(t):    # 微秒级延时函数
         start, end = 0, 0           # 声明变量
         start = time.time()       # 记录开始时间
-        t = (t-3)/1000000     # 将输入t的单位转换为秒，-3是时间补偿
+        t = t/1000000     # 将输入t的单位转换为秒，-3是时间补偿
         while end-start < t:  # 循环至时间差值大于或等于设定值时
             end = time.time()     # 记录结束时间
 
