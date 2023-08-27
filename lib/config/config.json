@@ -1,12 +1,14 @@
 {
     "long_distance_pixel_increment": "1.0",
     "close_distance_pixel_increment": "1.0",
-    "sensitivity": 1.0,
-    "aimkey": "0x06",
+    "sensitivity": 0.7,
+    "aimkey": "0x02",
     "aimtarget": 0,
-    "det_model_size": 200,
-    "aim_width": 128,
-    "aim_height": 128,
-    "max_pixel": 1.0,
-    "mouse_delay_microsecond": 1.0
+    "det_model_size": 416,
+    "aim_width": 218,
+    "aim_height": 218,
+    "max_pixel": 1,
+    "mouse_delay_microsecond": 0.1,
+    "max_soomth_length": 5,
+    "aim_mode": 0
 }

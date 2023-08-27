@@ -27,7 +27,7 @@ xcopy /s /y "%source_folder%lib\yolov5-master" "%destination_folder%lib\yolov5-m
 xcopy /s /y "%source_folder%使用说明" "%destination_folder%使用说明\"
 xcopy /s /y "%source_folder%更新包使用说明" "%destination_folder%更新包使用说明\"
 
-copy /y "%source_folder%lib\bestv2.pt" "%destination_folder%lib\"
+copy /y "%source_folder%lib\valorant-02.pt" "%destination_folder%lib\"
 copy /y "%source_folder%setup.bat" "%destination_folder%"
 copy /y "%source_folder%install.bat" "%destination_folder%"
 copy /y "%source_folder%start.bat" "%destination_folder%"

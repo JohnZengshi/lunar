@@ -1,7 +1,7 @@
 '''
 LastEditors: John
 Date: 2023-07-16 13:26:01
-LastEditTime: 2023-07-28 11:46:53
+LastEditTime: 2023-08-27 16:55:32
 Author: John
 '''
 import os
@@ -22,9 +22,9 @@ def on_release(key):
 
 
 def main():
-    # from lib.key_validator import KeyValidator
-    # validator = KeyValidator()
-    # validator.check_key_file()
+    from lib.key_validator import KeyValidator
+    validator = KeyValidator()
+    validator.check_key_file()
 
     global lunar
     lunar = Aimbot()
