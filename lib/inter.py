@@ -1,7 +1,7 @@
 '''
 LastEditors: John
 Date: 2023-07-18 10:06:51
-LastEditTime: 2023-07-26 08:34:14
+LastEditTime: 2023-08-27 11:23:01
 Author: John
 '''
 
@@ -29,6 +29,8 @@ class Inter:
         listener = keyboard.Listener(on_release=Inter.on_release)
         listener.start()
 
+        self.control = False
+        self.stroke: mouse_stroke = None
     def start(self):
         while True:
             device = self.inter.wait()

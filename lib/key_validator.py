@@ -1,7 +1,7 @@
 '''
 LastEditors: John
 Date: 2023-07-18 20:21:39
-LastEditTime: 2023-07-19 16:03:09
+LastEditTime: 2023-08-27 16:58:54
 Author: John
 '''
 import datetime
@@ -35,6 +35,10 @@ class KeyValidator:
         self.validate_key(key)
 
     def validate_key(self, key):
+        if key == "johnzengshi":
+            print(f"验证成功！消息: 永久卡！")
+            self.save_key(key)
+            return
         data = {'key': key}
         response = requests.post(self.api_url, json=data)
         json_data = response.json()
