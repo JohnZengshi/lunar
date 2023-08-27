@@ -4,7 +4,7 @@
     "sensitivity": 0.7,
     "aimkey": "0x02",
     "aimtarget": 0,
-    "det_model_size": 416,
+    "det_model_size": 200,
     "aim_width": 218,
     "aim_height": 218,
     "max_pixel": 1,

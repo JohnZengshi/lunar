@@ -379,14 +379,14 @@ class Aimbot:
             # Aimbot.gen_slider_ui(root=root, default=Aimbot.mouse_delay_microsecond,
             #                      label="设置mouse_delay_microsecond：", from_=0.1, to=10, resolution=0.1, callback=update_mouse_delay_microsecond)
 
-            # def update_det_model_size(value):
-            #     Aimbot.det_model_size = int(value)
-            #     Aimbot.setting_config['det_model_size'] = int(value)
-            #     with open(config_file, 'w') as file:
-            #         json.dump(Aimbot.setting_config, file, indent=4)
+            def update_det_model_size(value):
+                Aimbot.det_model_size = int(value)
+                Aimbot.setting_config['det_model_size'] = int(value)
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
 
-            # Aimbot.gen_slider_ui(root=root, default=Aimbot.det_model_size,
-            #                      label="设置det_model_size：", from_=200, to=416, resolution=1, callback=update_det_model_size)
+            Aimbot.gen_slider_ui(root=root, default=Aimbot.det_model_size,
+                                 label="设置det_model_size：", from_=200, to=416, resolution=1, callback=update_det_model_size)
 
             # def update_aim_width(value):
             #     Aimbot.aim_width = int(value)
@@ -442,7 +442,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_select_ui(root=root, default=Aimbot.aim_mode, label="选择自瞄模式：", options=[
-                                 "单次瞄准（推荐）", "跟随瞄准"], values=[0, 1], callback=aim_mode_on_select)
+                                 "单点瞄准（推荐）", "跟随瞄准"], values=[0, 1], callback=aim_mode_on_select)
 
             # def aim_target_on_select(selected_value):
             #     Aimbot.aimtarget = selected_value
