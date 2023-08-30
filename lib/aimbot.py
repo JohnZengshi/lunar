@@ -28,8 +28,8 @@ from lib.interception_py.stroke import mouse_stroke
 # DEFAULT_AIM_WIDTH = 128
 # DEFAULT_AIM_HEIGHT = 128
 
-DEFAULT_TARGET_HEAD_RATIO = 2.7
-DEFAULT_TARGET_BODY_RATIO = 3.5
+DEFAULT_TARGET_HEAD_RATIO = 0
+DEFAULT_TARGET_BODY_RATIO = -1
 
 config_file = "lib/config/config.json"
 
@@ -446,14 +446,15 @@ class Aimbot:
             Aimbot.gen_select_ui(root=root, default=Aimbot.aim_mode, label="选择自瞄模式：", options=[
                                  "单点瞄准（推荐）", "跟随瞄准"], values=[0, 1], callback=aim_mode_on_select)
 
-            # def aim_target_on_select(selected_value):
-            #     Aimbot.aimtarget = selected_value
-            #     Aimbot.setting_config["aimtarget"] = selected_value
-            #     with open(config_file, 'w') as file:
-            #         json.dump(Aimbot.setting_config, file, indent=4)
+            def aim_target_on_select(selected_value):
+                Aimbot.aimtarget = selected_value
+                Aimbot.setting_config["aimtarget"] = selected_value
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
 
-            # Aimbot.gen_select_ui(root=root, default=Aimbot.aimtarget, label="选择自瞄位置：", options=[
-            #                      "头部（危险）", "随机头部身体", "身体"], values=[0, 1, 2], callback=aim_target_on_select)
+            Aimbot.gen_select_ui(root=root, default=Aimbot.aimtarget, label="选择自瞄位置：", options=[
+                                 "头部（危险）", "随机头部身体", "身体"], values=[0, 1, 2], callback=aim_target_on_select)
+
             def on_fire_follower(value):
                 Aimbot.fire_follower = value
                 Aimbot.setting_config["fire_follower"] = value
@@ -495,10 +496,15 @@ class Aimbot:
                     x1, y1, x2, y2, conf = *x1y1, *x2y2, conf.item()
                     height = y2 - y1
                     # offset to roughly approximate the head using a ratio of the height
-                    # - height/target_ratio_y
+                    if target_ratio_y == 0:
+                        offset = 0
+                    elif target_ratio_y < 0:
+                        offset = height*target_ratio_y
+                    else:
+                        offset = height/target_ratio_y
 
                     relative_head_X, relative_head_Y = int(
-                        (x1 + x2)/target_ratio_x), int((y1 + y2)/2)
+                        (x1 + x2)/target_ratio_x), int((y1 + y2)/2 - offset)
                     # helps ensure that your own player is not regarded as a valid detection
                     own_player = x1 < 15 or (
                         x1 < self.box_constant/5 and y2 > self.box_constant/1.2)
