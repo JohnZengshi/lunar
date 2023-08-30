@@ -1,7 +1,7 @@
 '''
 LastEditors: John
 Date: 2023-07-18 10:06:51
-LastEditTime: 2023-08-27 11:23:01
+LastEditTime: 2023-08-29 17:50:14
 Author: John
 '''
 
@@ -31,13 +31,18 @@ class Inter:
 
         self.control = False
         self.stroke: mouse_stroke = None
+
     def start(self):
         while True:
             device = self.inter.wait()
             # print(device)
+            stroke: mouse_stroke = self.inter.receive(device)
             if interception.is_mouse(device):
                 Inter.mdevice = device
-            stroke: mouse_stroke = self.inter.receive(device)
+                if self.control:
+                    stroke.x = 0
+                    stroke.y = 0
+
             self.inter.send(device, stroke)
             Inter.init = True
             if interception.is_mouse(device) and Inter.record:

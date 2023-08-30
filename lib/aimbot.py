@@ -28,7 +28,7 @@ from lib.interception_py.stroke import mouse_stroke
 # DEFAULT_AIM_WIDTH = 128
 # DEFAULT_AIM_HEIGHT = 128
 
-DEFAULT_TARGET_HEAD_RATIO = 3.5
+DEFAULT_TARGET_HEAD_RATIO = 2.7
 DEFAULT_TARGET_BODY_RATIO = 3.5
 
 config_file = "lib/config/config.json"
@@ -62,6 +62,7 @@ class Aimbot:
     total_length = 0
     max_soomth_length = setting_config["max_soomth_length"]
     aim_mode = setting_config["aim_mode"]
+    fire_follower = setting_config["fire_follower"]
     d_time: float = 0.00
 
     def __init__(self, box_constant=416, collect_data=False, mouse_delay=0.0001, debug=False):
@@ -133,16 +134,17 @@ class Aimbot:
         return True if 960 - threshold <= x <= 960 + threshold and 540 - threshold <= y <= 540 + threshold else False
 
     def move_crosshair(self, x, y):
-        if Aimbot.is_targeted() == False or Aimbot.is_fire():
+        if Aimbot.is_targeted() == False or (Aimbot.fire_follower == 1 and Aimbot.is_fire()):
             Aimbot.total_length = 0
 
         if Aimbot.is_targeted() and Aimbot.is_point_inside_rectangle(self, x, y):
             # 灵敏度每减0.1，值加0.2
             scale = 1 + (1 - Aimbot.sensitivity) * 2
+            # self.inter.control = True
         else:
-
             Aimbot.absolute_head_X = 0
             Aimbot.absolute_head_Y = 0
+            # self.inter.control = False
             return  # TODO
 
         if Aimbot.is_target_locked(x, y):
@@ -160,7 +162,7 @@ class Aimbot:
             Aimbot.delayMicrosecond(1)
 
         # 防抖睡眠
-        # time.sleep(Aimbot.mouse_delay_microsecond / 1_000_000_000)
+        time.sleep(Aimbot.mouse_delay_microsecond / 10)
         # generator yields pixel tuples for relative movement
 
     def interpolate_coordinates_from_center(absolute_coordinates, scale):
@@ -361,23 +363,23 @@ class Aimbot:
             Aimbot.gen_slider_ui(root=root, default=Aimbot.sensitivity,
                                  label="设置sensitivity（游戏内鼠标的灵敏度）：", from_=0.1, to=1, resolution=0.1, callback=update_sensitivity)
 
-            # def update_max_pixel(value):
-            #     Aimbot.max_pixel = int(value)
-            #     Aimbot.setting_config['max_pixel'] = int(value)
-            #     with open(config_file, 'w') as file:
-            #         json.dump(Aimbot.setting_config, file, indent=4)
+            def update_max_pixel(value):
+                Aimbot.max_pixel = int(value)
+                Aimbot.setting_config['max_pixel'] = int(value)
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
 
-            # Aimbot.gen_slider_ui(root=root, default=Aimbot.max_pixel,
-            #                      label="设置max_pixel：", from_=1, to=10, resolution=1, callback=update_max_pixel)
+            Aimbot.gen_slider_ui(root=root, default=Aimbot.max_pixel,
+                                 label="设置max_pixel：", from_=1, to=10, resolution=1, callback=update_max_pixel)
 
-            # def update_mouse_delay_microsecond(value):
-            #     Aimbot.mouse_delay_microsecond = float(value)
-            #     Aimbot.setting_config['mouse_delay_microsecond'] = float(value)
-            #     with open(config_file, 'w') as file:
-            #         json.dump(Aimbot.setting_config, file, indent=4)
+            def update_mouse_delay_microsecond(value):
+                Aimbot.mouse_delay_microsecond = float(value)
+                Aimbot.setting_config['mouse_delay_microsecond'] = float(value)
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
 
-            # Aimbot.gen_slider_ui(root=root, default=Aimbot.mouse_delay_microsecond,
-            #                      label="设置mouse_delay_microsecond：", from_=0.1, to=10, resolution=0.1, callback=update_mouse_delay_microsecond)
+            Aimbot.gen_slider_ui(root=root, default=Aimbot.mouse_delay_microsecond,
+                                 label="设置mouse_delay_microsecond：", from_=0, to=10, resolution=0.1, callback=update_mouse_delay_microsecond)
 
             def update_det_model_size(value):
                 Aimbot.det_model_size = int(value)
@@ -433,7 +435,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_select_ui(root=root, default=Aimbot.aimkey, label="选择自瞄按键：", options=[
-                                 "Ctrl", "Shift", "鼠标上侧键", "鼠标下侧键", "鼠标左键", "鼠标右键", "Alt", "空格键"], values=["0x11", "0x10", "0x06", "0x05", "0x01", "0x02", "0xa4", "0x20"], callback=aim_key_on_select)
+                                 "Ctrl", "Shift", "鼠标上侧键", "鼠标下侧键", "鼠标左键", "鼠标右键", "Alt", "空格键", "自动瞄准"], values=["0x11", "0x10", "0x06", "0x05", "0x01", "0x02", "0xa4", "0x20", "auto"], callback=aim_key_on_select)
 
             def aim_mode_on_select(selected_value):
                 Aimbot.aim_mode = selected_value
@@ -452,7 +454,13 @@ class Aimbot:
 
             # Aimbot.gen_select_ui(root=root, default=Aimbot.aimtarget, label="选择自瞄位置：", options=[
             #                      "头部（危险）", "随机头部身体", "身体"], values=[0, 1, 2], callback=aim_target_on_select)
-
+            def on_fire_follower(value):
+                Aimbot.fire_follower = value
+                Aimbot.setting_config["fire_follower"] = value
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
+            Aimbot.gen_toggle_ui(root=root, label="开火跟随", default=Aimbot.fire_follower,
+                                 callback=on_fire_follower)
             # 运行主循环
             root.mainloop()
 
@@ -460,16 +468,16 @@ class Aimbot:
         thread_2.daemon = True
         thread_2.start()
 
-        # def aim_thread():
-        #     while True:
-        #         if Aimbot.is_aimbot_enabled():
-        #             Aimbot.move_crosshair(
-        #                 self, Aimbot.absolute_head_X, Aimbot.absolute_head_Y)
-        #         time.sleep(0.000000001)
+        def aim_thread():
+            while True:
+                if Aimbot.is_aimbot_enabled():
+                    Aimbot.move_crosshair(
+                        self, Aimbot.absolute_head_X, Aimbot.absolute_head_Y)
+                time.sleep(1 / 100_000_000)
 
-        # thread_3 = threading.Thread(target=aim_thread)
-        # thread_3.daemon = True
-        # thread_3.start()
+        thread_3 = threading.Thread(target=aim_thread)
+        thread_3.daemon = True
+        thread_3.start()
 
         while True:
             start_time = time.perf_counter()
@@ -562,9 +570,9 @@ class Aimbot:
 
                     Aimbot.absolute_head_X = absolute_head_X
                     Aimbot.absolute_head_Y = absolute_head_Y
-                    if Aimbot.is_aimbot_enabled():
-                        Aimbot.move_crosshair(
-                            self, absolute_head_X, absolute_head_Y)
+                    # if Aimbot.is_aimbot_enabled():
+                    #     Aimbot.move_crosshair(
+                    #         self, absolute_head_X, absolute_head_Y)
 
             cv2.putText(frame, f"FPS: {int(1/(time.perf_counter() - start_time))}",
                         (5, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (113, 116, 244), 2)
@@ -623,10 +631,27 @@ class Aimbot:
         slider.set(default)
         slider.pack(pady=10)
 
+    def gen_toggle_ui(root: tk.Tk, label: str, default: int, callback: Callable[[Any], None]):
+        # 创建容器1
+        frame = tk.Frame(root)
+        frame.pack(anchor='w')
+        label_text = tk.Label(frame, text=label)
+        label_text.pack(side=tk.LEFT)
+
+        def toggle():
+            callback(switch_state.get())
+        # 创建一个整型变量来跟踪开关状态（0表示关，1表示开）
+        switch_state = tk.IntVar(value=default)
+
+        # 创建开关按钮
+        switch_button = tk.Checkbutton(
+            frame, variable=switch_state, command=toggle)
+        switch_button.pack()
+
     def delayMicrosecond(t):    # 微秒级延时函数
         start, end = 0, 0           # 声明变量
         start = time.time()       # 记录开始时间
-        t = t/1_000_000_000_000_000    # 将输入t的单位转换为秒，-3是时间补偿
+        t = t/1_000_000_000_000_000    # 将输入t的单位转换为秒
         while end-start < t:  # 循环至时间差值大于或等于设定值时
             end = time.time()     # 记录结束时间
 
