@@ -5,11 +5,12 @@
     "aimkey": "0x02",
     "aimtarget": 0,
     "det_model_size": 200,
-    "aim_width": 120,
-    "aim_height": 120,
+    "aim_width": 150,
+    "aim_height": 150,
     "max_pixel": 1,
     "mouse_delay_microsecond": 1.0,
     "max_soomth_length": 5,
-    "aim_mode": 0,
-    "fire_follower": 1
+    "aim_mode": 1,
+    "fire_follower": 0,
+    "show_vision": 0
 }

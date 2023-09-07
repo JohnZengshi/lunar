@@ -63,6 +63,7 @@ class Aimbot:
     max_soomth_length = setting_config["max_soomth_length"]
     aim_mode = setting_config["aim_mode"]
     fire_follower = setting_config["fire_follower"]
+    show_vision = setting_config["show_vision"]
     d_time: float = 0.00
 
     def __init__(self, box_constant=416, collect_data=False, mouse_delay=0.0001, debug=False):
@@ -363,14 +364,14 @@ class Aimbot:
             Aimbot.gen_slider_ui(root=root, default=Aimbot.sensitivity,
                                  label="设置sensitivity（游戏内鼠标的灵敏度）：", from_=0.1, to=1, resolution=0.1, callback=update_sensitivity)
 
-            def update_max_pixel(value):
-                Aimbot.max_pixel = int(value)
-                Aimbot.setting_config['max_pixel'] = int(value)
-                with open(config_file, 'w') as file:
-                    json.dump(Aimbot.setting_config, file, indent=4)
+            # def update_max_pixel(value):
+            #     Aimbot.max_pixel = int(value)
+            #     Aimbot.setting_config['max_pixel'] = int(value)
+            #     with open(config_file, 'w') as file:
+            #         json.dump(Aimbot.setting_config, file, indent=4)
 
-            Aimbot.gen_slider_ui(root=root, default=Aimbot.max_pixel,
-                                 label="设置max_pixel：", from_=1, to=10, resolution=1, callback=update_max_pixel)
+            # Aimbot.gen_slider_ui(root=root, default=Aimbot.max_pixel,
+            #                      label="设置max_pixel：", from_=1, to=10, resolution=1, callback=update_max_pixel)
 
             def update_mouse_delay_microsecond(value):
                 Aimbot.mouse_delay_microsecond = float(value)
@@ -379,7 +380,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_slider_ui(root=root, default=Aimbot.mouse_delay_microsecond,
-                                 label="设置mouse_delay_microsecond：", from_=0, to=10, resolution=0.1, callback=update_mouse_delay_microsecond)
+                                 label="设置mouse delay microsecond：", from_=0, to=10, resolution=0.1, callback=update_mouse_delay_microsecond)
 
             def update_det_model_size(value):
                 Aimbot.det_model_size = int(value)
@@ -435,7 +436,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_select_ui(root=root, default=Aimbot.aimkey, label="选择自瞄按键：", options=[
-                                 "Ctrl", "Shift", "鼠标上侧键", "鼠标下侧键", "鼠标左键", "鼠标右键", "Alt", "空格键", "自动瞄准"], values=["0x11", "0x10", "0x06", "0x05", "0x01", "0x02", "0xa4", "0x20", "auto"], callback=aim_key_on_select)
+                                 "Ctrl", "Shift", "鼠标上侧键", "鼠标下侧键", "鼠标左键", "鼠标右键", "Alt", "空格键"], values=["0x11", "0x10", "0x06", "0x05", "0x01", "0x02", "0xa4", "0x20"], callback=aim_key_on_select)
 
             def aim_mode_on_select(selected_value):
                 Aimbot.aim_mode = selected_value
@@ -444,7 +445,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_select_ui(root=root, default=Aimbot.aim_mode, label="选择自瞄模式：", options=[
-                                 "单点瞄准（推荐）", "跟随瞄准"], values=[0, 1], callback=aim_mode_on_select)
+                                 "单点瞄准", "跟随瞄准"], values=[0, 1], callback=aim_mode_on_select)
 
             def aim_target_on_select(selected_value):
                 Aimbot.aimtarget = selected_value
@@ -453,7 +454,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_select_ui(root=root, default=Aimbot.aimtarget, label="选择自瞄位置：", options=[
-                                 "头部（危险）", "随机头部身体", "身体"], values=[0, 1, 2], callback=aim_target_on_select)
+                                 "头部", "随机头部身体", "身体"], values=[0, 1, 2], callback=aim_target_on_select)
 
             def on_fire_follower(value):
                 Aimbot.fire_follower = value
@@ -462,6 +463,14 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
             Aimbot.gen_toggle_ui(root=root, label="开火跟随", default=Aimbot.fire_follower,
                                  callback=on_fire_follower)
+
+            def on_show_vision(value):
+                Aimbot.show_vision = value
+                Aimbot.setting_config["show_vision"] = value
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
+            Aimbot.gen_toggle_ui(root=root, label="open vision", default=Aimbot.show_vision,
+                                 callback=on_show_vision)
             # 运行主循环
             root.mainloop()
 
@@ -582,9 +591,12 @@ class Aimbot:
 
             cv2.putText(frame, f"FPS: {int(1/(time.perf_counter() - start_time))}",
                         (5, 30), cv2.FONT_HERSHEY_DUPLEX, 1, (113, 116, 244), 2)
-            cv2.imshow("Lunar Vision", frame)
-            if cv2.waitKey(1) & 0xFF == ord('0'):
-                break
+            if Aimbot.show_vision != 0:
+                cv2.imshow("Lunar Vision", frame)
+                if cv2.waitKey(1) & 0xFF == ord('0'):
+                    break
+            else:
+                cv2.destroyAllWindows()
             # 释放 GPU 内存
             torch.cuda.empty_cache()
 
