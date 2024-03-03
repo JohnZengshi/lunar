@@ -28,8 +28,8 @@ from lib.interception_py.stroke import mouse_stroke
 # DEFAULT_AIM_WIDTH = 128
 # DEFAULT_AIM_HEIGHT = 128
 
-DEFAULT_TARGET_HEAD_RATIO = 0
-DEFAULT_TARGET_BODY_RATIO = -1
+DEFAULT_TARGET_HEAD_RATIO = 2.7
+DEFAULT_TARGET_BODY_RATIO = 5.5
 
 config_file = "lib/config/config.json"
 
@@ -73,7 +73,7 @@ class Aimbot:
 
         print("[INFO] Loading the neural network model")
         self.model = torch.hub.load(
-            'lib/yolov5-master', 'custom', path='lib/valorant-02.pt', source='local', force_reload=False)
+            'lib/yolov5-master', 'custom', path='lib/valorant-n-3.pt', source='local', force_reload=False)
 
         # 多个gpu推理
         if torch.cuda.device_count() > 1:
@@ -192,7 +192,8 @@ class Aimbot:
         if length == 0:
             return
         # yield int(diff_x / abs(diff_x or 1) * Aimbot.max_pixel), int(diff_y / abs(diff_y or 1) * Aimbot.max_pixel)
-        # yield int(diff_x), int(diff_y)
+        # yield int(diff_x / Aimbot.mouse_delay_microsecond), int(diff_y / Aimbot.mouse_delay_microsecond)
+        # return
 
         # 旧方案
         # print(f"diff_x:{diff_x},diff_y:{diff_y},length:{length}")

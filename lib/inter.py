@@ -1,7 +1,7 @@
 '''
 LastEditors: John
 Date: 2023-07-18 10:06:51
-LastEditTime: 2023-08-29 17:50:14
+LastEditTime: 2024-02-17 15:55:19
 Author: John
 '''
 
@@ -45,8 +45,8 @@ class Inter:
 
             self.inter.send(device, stroke)
             Inter.init = True
-            if interception.is_mouse(device) and Inter.record:
-                print(stroke.x, stroke.y)
+            # if interception.is_mouse(device) and Inter.record:
+            #     print(stroke.x, stroke.y)
             if stroke is None or Inter.init == False:
                 break
 
