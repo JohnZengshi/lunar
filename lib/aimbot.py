@@ -64,6 +64,7 @@ class Aimbot:
     aim_mode = setting_config["aim_mode"]
     fire_follower = setting_config["fire_follower"]
     show_vision = setting_config["show_vision"]
+    fast_shot = setting_config["fast_shot"]
     d_time: float = 0.00
 
     def __init__(self, box_constant=416, collect_data=False, mouse_delay=0.0001, debug=False):
@@ -73,7 +74,7 @@ class Aimbot:
 
         print("[INFO] Loading the neural network model")
         self.model = torch.hub.load(
-            'lib/yolov5-master', 'custom', path='lib/valorant-n-3.pt', source='local', force_reload=False)
+            'lib/yolov5-master', 'custom', path='lib/bestv2.pt', source='local', force_reload=False)
 
         # 多个gpu推理
         if torch.cuda.device_count() > 1:
@@ -160,7 +161,8 @@ class Aimbot:
             stroke.x = rel_x
             stroke.y = rel_y
             self.inter.inter.send(Inter.mdevice, stroke)
-            Aimbot.delayMicrosecond(1)
+            if (Aimbot.fast_shot == 0):
+                Aimbot.delayMicrosecond(1)
 
         # 防抖睡眠
         time.sleep(Aimbot.mouse_delay_microsecond / 10)
@@ -472,6 +474,14 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
             Aimbot.gen_toggle_ui(root=root, label="open vision", default=Aimbot.show_vision,
                                  callback=on_show_vision)
+
+            def on_fast_shot(value):
+                Aimbot.fast_shot = value
+                Aimbot.setting_config["fast_shot"] = value
+                with open(config_file, 'w') as file:
+                    json.dump(Aimbot.setting_config, file, indent=4)
+            Aimbot.gen_toggle_ui(root=root, label="fast shot", default=Aimbot.fast_shot,
+                                 callback=on_fast_shot)
             # 运行主循环
             root.mainloop()
 
