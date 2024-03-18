@@ -74,7 +74,7 @@ class Aimbot:
 
         print("[INFO] Loading the neural network model")
         self.model = torch.hub.load(
-            'lib/yolov5-master', 'custom', path='lib/bestv2.pt', source='local', force_reload=False)
+            'lib/yolov5-master', 'custom', path='lib/valorant-11.pt', source='local', force_reload=False)
 
         # 多个gpu推理
         if torch.cuda.device_count() > 1:
@@ -124,6 +124,8 @@ class Aimbot:
     def is_targeted():
         if Aimbot.aimkey == "auto":
             return True
+        elif (Aimbot.fire_follower == 1 and Aimbot.is_fire()):
+            return True
         else:
             return True if win32api.GetKeyState(int(Aimbot.aimkey, 16)) in (-127, -128) else False
 
@@ -136,7 +138,7 @@ class Aimbot:
         return True if 960 - threshold <= x <= 960 + threshold and 540 - threshold <= y <= 540 + threshold else False
 
     def move_crosshair(self, x, y):
-        if Aimbot.is_targeted() == False or (Aimbot.fire_follower == 1 and Aimbot.is_fire()):
+        if Aimbot.is_targeted() == False:
             Aimbot.total_length = 0
 
         if Aimbot.is_targeted() and Aimbot.is_point_inside_rectangle(self, x, y):
@@ -439,7 +441,7 @@ class Aimbot:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
             Aimbot.gen_select_ui(root=root, default=Aimbot.aimkey, label="选择自瞄按键：", options=[
-                                 "Ctrl", "Shift", "鼠标上侧键", "鼠标下侧键", "鼠标左键", "鼠标右键", "Alt", "空格键"], values=["0x11", "0x10", "0x06", "0x05", "0x01", "0x02", "0xa4", "0x20"], callback=aim_key_on_select)
+                                 "Ctrl", "Shift", "鼠标上侧键", "鼠标下侧键", "鼠标左键", "鼠标右键", "Alt", "空格键", "auto"], values=["0x11", "0x10", "0x06", "0x05", "0x01", "0x02", "0xa4", "0x20", "auto"], callback=aim_key_on_select)
 
             def aim_mode_on_select(selected_value):
                 Aimbot.aim_mode = selected_value
@@ -464,7 +466,7 @@ class Aimbot:
                 Aimbot.setting_config["fire_follower"] = value
                 with open(config_file, 'w') as file:
                     json.dump(Aimbot.setting_config, file, indent=4)
-            Aimbot.gen_toggle_ui(root=root, label="开火跟随", default=Aimbot.fire_follower,
+            Aimbot.gen_toggle_ui(root=root, label="开火aim", default=Aimbot.fire_follower,
                                  callback=on_fire_follower)
 
             def on_show_vision(value):
