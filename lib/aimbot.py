@@ -182,6 +182,9 @@ class Aimbot:
 
         # if length <= 5:
         #     return
+        # jie jue ya qiang !!!
+        if Aimbot.fire_follower == 1 and Aimbot.total_length != 0 and Aimbot.is_fire():
+            return
         # 单次瞄准模式
         if Aimbot.aim_mode == 0 and Aimbot.total_length != 0:
             # print(f"锁定：{Aimbot.total_length}")
