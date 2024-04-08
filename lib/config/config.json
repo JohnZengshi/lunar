@@ -2,16 +2,17 @@
     "long_distance_pixel_increment": "1.0",
     "close_distance_pixel_increment": "1.0",
     "sensitivity": 0.7,
-    "aimkey": "0x02",
+    "aimkey": "0x06",
     "aimtarget": 0,
     "det_model_size": 416,
     "aim_width": 300,
     "aim_height": 300,
     "max_pixel": 1,
-    "mouse_delay_microsecond": 1.0,
+    "mouse_delay_microsecond": 2.0,
     "max_soomth_length": 5,
     "aim_mode": 1,
     "fire_follower": 1,
     "show_vision": 0,
-    "fast_shot": 0
+    "fast_shot": 0,
+    "nano_second": 5
 }
