@@ -497,7 +497,7 @@ class Aimbot:
                 with open(config_file, 'w') as file:
                     json.dump(Aimbot.setting_config, file, indent=4)
 
-            Aimbot.gen_slider_ui(root=root, default=Aimbot.det_model_size,
+            Aimbot.gen_slider_ui(root=root, default=Aimbot.nano_second,
                                  label="设置nano_second：", from_=0, to=10, resolution=1, callback=update_nano_second)
             # 运行主循环
             root.mainloop()
