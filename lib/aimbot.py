@@ -23,6 +23,10 @@ from lib.interception_py.consts import interception_filter_key_state, intercepti
 from lib.interception_py.interception import interception
 from lib.interception_py.stroke import mouse_stroke
 
+
+import pathlib
+temp = pathlib.PosixPath
+pathlib.PosixPath = pathlib.WindowsPath
 # from lib.memory import SharedMemoryWriter
 
 # DETECTION_BOX = 200
@@ -76,7 +80,7 @@ class Aimbot:
 
         print("[INFO] Loading the neural network model")
         self.model = torch.hub.load(
-            'lib/yolov5-master', 'custom', path='lib/valorant-11.pt', source='local', force_reload=False)
+            'lib/yolov5-master', 'custom', path='lib/valorant-12.pt', source='local', force_reload=False)
 
         # 多个gpu推理
         if torch.cuda.device_count() > 1:

@@ -16,15 +16,9 @@
 
 🔭 Turn your newly trained <b>YOLOv5 model into an API</b> with just a few commands using ClearML Serving
 
-<br />
 And so much more. It's up to you how many of these tools you want to use, you can stick to the experiment manager, or chain them all together into an impressive pipeline!
-<br />
-<br />
 
 ![ClearML scalars dashboard](https://github.com/thepycoder/clearml_screenshots/raw/main/experiment_manager_with_compare.gif)
-
-<br />
-<br />
 
 ## 🦾 Setting Things Up
 
@@ -38,15 +32,13 @@ Either sign up for free to the [ClearML Hosted Service](https://cutt.ly/yolov5-t
    pip install clearml
    ```
 
-1. Connect the ClearML SDK to the server by [creating credentials](https://app.clear.ml/settings/workspace-configuration) (go right top to Settings -> Workspace -> Create new credentials), then execute the command below and follow the instructions:
+2. Connect the ClearML SDK to the server by [creating credentials](https://app.clear.ml/settings/workspace-configuration) (go right top to Settings -> Workspace -> Create new credentials), then execute the command below and follow the instructions:
 
    ```bash
    clearml-init
    ```
 
 That's it! You're done 😎
-
-<br />
 
 ## 🚀 Training YOLOv5 With ClearML
 
@@ -58,8 +50,7 @@ pip install clearml>=1.2.0
 
 This will enable integration with the YOLOv5 training script. Every training run from now on, will be captured and stored by the ClearML experiment manager.
 
-If you want to change the `project_name` or `task_name`, use the `--project` and `--name` arguments of the `train.py` script, by default the project will be called `YOLOv5` and the task `Training`.
-PLEASE NOTE: ClearML uses `/` as a delimiter for subprojects, so be careful when using `/` in your project name!
+If you want to change the `project_name` or `task_name`, use the `--project` and `--name` arguments of the `train.py` script, by default the project will be called `YOLOv5` and the task `Training`. PLEASE NOTE: ClearML uses `/` as a delimiter for subprojects, so be careful when using `/` in your project name!
 
 ```bash
 python train.py --img 640 --batch 16 --epochs 3 --data coco128.yaml --weights yolov5s.pt --cache
@@ -86,12 +77,9 @@ This will capture:
 - Validation images per epoch
 - ...
 
-That's a lot right? 🤯
-Now, we can visualize all of this information in the ClearML UI to get an overview of our training progress. Add custom columns to the table view (such as e.g. mAP_0.5) so you can easily sort on the best performing model. Or select multiple experiments and directly compare them!
+That's a lot right? 🤯 Now, we can visualize all of this information in the ClearML UI to get an overview of our training progress. Add custom columns to the table view (such as e.g. mAP_0.5) so you can easily sort on the best performing model. Or select multiple experiments and directly compare them!
 
 There even more we can do with all of this information, like hyperparameter optimization and remote execution, so keep reading if you want to see how that works!
-
-<br />
 
 ## 🔗 Dataset Version Management
 
@@ -159,8 +147,6 @@ Now that you have a ClearML dataset, you can very simply use it to train custom 
 python train.py --img 640 --batch 16 --epochs 3 --data clearml://<your_dataset_id> --weights yolov5s.pt --cache
 ```
 
-<br />
-
 ## 👀 Hyperparameter Optimization
 
 Now that we have our experiments and data versioned, it's time to take a look at what we can build on top!
@@ -181,8 +167,7 @@ python utils/loggers/clearml/hpo.py
 
 ## 🤯 Remote Execution (advanced)
 
-Running HPO locally is really handy, but what if we want to run our experiments on a remote machine instead? Maybe you have access to a very powerful GPU machine on-site, or you have some budget to use cloud GPUs.
-This is where the ClearML Agent comes into play. Check out what the agent can do here:
+Running HPO locally is really handy, but what if we want to run our experiments on a remote machine instead? Maybe you have access to a very powerful GPU machine on-site, or you have some budget to use cloud GPUs. This is where the ClearML Agent comes into play. Check out what the agent can do here:
 
 - [YouTube video](https://youtu.be/MX3BrXnaULs)
 - [Documentation](https://clear.ml/docs/latest/docs/clearml_agent)

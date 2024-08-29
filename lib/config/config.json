@@ -1,7 +1,7 @@
 {
     "long_distance_pixel_increment": "1.0",
     "close_distance_pixel_increment": "1.0",
-    "sensitivity": 0.7,
+    "sensitivity": 1.0,
     "aimkey": "0x06",
     "aimtarget": 0,
     "det_model_size": 416,
